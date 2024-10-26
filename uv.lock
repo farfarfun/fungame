@@ -1,7 +1,22 @@
 version = 1
-requires-python = ">=3.6"
+requires-python = ">=3.11"
 
 [[package]]
 name = "fungame"
 version = "1.0.1"
 source = { virtual = "." }
+dependencies = [
+    { name = "fungame-sudoku" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "fungame-sudoku", specifier = ">=0.1.1" }]
+
+[[package]]
+name = "fungame-sudoku"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fc/3d/c6b9b3345e0666f0b233cc71c76946988549a2868d9e852dcc15c79607d8/fungame_sudoku-0.1.1.tar.gz", hash = "sha256:1841c81ddf4eebbab661f2fbc87be2c1b15421078a2d0db989f314e8ead9ac6f", size = 9806 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/b1/c29cdc02002475bb8a3de77d5ce682fc6aa270a5f90f58160299941288db/fungame_sudoku-0.1.1-py3-none-any.whl", hash = "sha256:8114112cba0b6e8dd0612d84a7b445dcae1d75ceff0f7ab921edc5887e63097e", size = 10278 },
+]
