@@ -1,6 +1,10 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "fungame"
-version = "1.0.7"
+version = "1.0.8"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.6"
@@ -8,3 +12,6 @@ dependencies = [ "fungame-sudoku>=1.0.2",]
 
 [dependency-groups]
 dev = [ "pytest",]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fungame", "src/notegame"]
