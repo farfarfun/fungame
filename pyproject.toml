@@ -5,3 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.6"
 dependencies = [ "fungame-sudoku>=1.0.2",]
+
+[dependency-groups]
+dev = [ "pytest",]
