@@ -6,20 +6,30 @@ def test_import_fungame():
     import fungame  # noqa: F401
 
 
-def test_import_notegame():
-    # 仓库里真正的游戏逻辑代码放在 notegame.* 命名空间下（历史遗留，未随 fun* 改名完成），
-    # fungame 包本体（src/fungame/__init__.py）是空的。
-    import notegame  # noqa: F401
+def test_import_fungame_games_sudoku():
+    # 真正的游戏逻辑代码已经从 notegame.* 迁移到 fungame.* 下。
+    from fungame.games.sudoku import sudoku_generate
+
+    puzzle = sudoku_generate()
+    assert puzzle.shape == (9, 9)
 
 
-def test_notegame_games_unavailable_due_to_missing_notetool():
-    # notegame.games.sudoku / nonogram / topwar 等子模块依赖已废弃且未发布到 PyPI 的
-    # `notetool` 包（`from notetool.tool.log import logger`），无法安装，因此这些子模块
-    # 实际上无法被外部用户导入或使用。这部分是与已发布的 fungame-sudoku 重复的旧代码，
-    # 不在 fungame 包自身对外暴露的能力范围内，此处只做记录性跳过，不修复业务逻辑。
-    with pytest.raises(ModuleNotFoundError):
-        import notegame.games.sudoku.core  # noqa: F401
-    pytest.skip(
-        "notegame.games.* 依赖已废弃且未发布的 notetool 包，无法安装；"
-        "该目录是与已发布 fungame-sudoku 重复的旧代码，不属于 fungame 包的对外 API"
-    )
+def test_import_notegame_compat_shim_warns_and_aliases():
+    # `notegame` 是废弃的兼容层，转发到 `fungame`，并给出 DeprecationWarning。
+    # 注意：`notegame/__init__.py` 的 warnings.warn() 只在模块首次被执行时触发一次，
+    # 之后 `import notegame` 命中 sys.modules 缓存不会重复告警，所以这个测试必须是
+    # 本文件里第一个 `import notegame` 的地方。
+    with pytest.deprecated_call():
+        import notegame
+
+    import fungame
+
+    assert notegame is fungame
+
+
+def test_import_notegame_games_sudoku_compat():
+    # 沿用旧的 `notegame.games.sudoku` 导入路径依然可用（走的是上面缓存的别名）。
+    from notegame.games.sudoku import sudoku_generate
+
+    puzzle = sudoku_generate()
+    assert puzzle.shape == (9, 9)

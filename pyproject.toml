@@ -4,14 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fungame"
-version = "1.0.8"
+version = "1.0.9"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [ "fungame-sudoku>=1.0.2",]
+dependencies = [ "fungame-sudoku>=1.0.2", "farfuntool>=0.6.0", "funsecret>=1.4.0", "numpy",]
 
 [dependency-groups]
 dev = [ "pytest",]
 
 [tool.hatch.build.targets.wheel]
+# src/notegame is the deprecated `notegame` -> `fungame` compat shim, kept for
+# existing `import notegame` users; new code should import `fungame` directly.
 packages = ["src/fungame", "src/notegame"]
