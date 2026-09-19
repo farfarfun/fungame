@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
 
 import copy
 from queue import LifoQueue, Queue
 
 import numpy as np
-from funtool.log import logger
+from farlog import getLogger
+
+logger = getLogger("fungame")
 
 
 class Recorder(object):
@@ -369,26 +370,24 @@ class Sudoku(object):
                 self.recall()
 
 
-def sudoku_generate(mask_rate=0.5):
-    while True:
-        n = 9
-        m = np.zeros((n, n), np.int_)
-        rg = np.arange(1, n + 1)
-        m[0, :] = np.random.choice(rg, n, replace=False)
-        try:
-            for r in range(1, n):
-                for c in range(n):
-                    col_rest = np.setdiff1d(rg, m[:r, c])
-                    row_rest = np.setdiff1d(rg, m[r, :c])
-                    avb1 = np.intersect1d(col_rest, row_rest)
-                    sub_r, sub_c = r // 3, c // 3
-                    avb2 = np.setdiff1d(np.arange(0, n + 1),
-                                        m[sub_r * 3:(sub_r + 1) * 3, sub_c * 3:(sub_c + 1) * 3].ravel())
-                    avb = np.intersect1d(avb1, avb2)
-                    m[r, c] = np.random.choice(avb, size=1)
-            break
-        except ValueError:
-            pass
+def _generate_full_grid(n: int = 9, base: int = 3) -> np.ndarray:
+    """生成一个完整合法的数独解（标准的分块随机置换算法，一次成功，无需回溯）。
+
+    参考: https://stackoverflow.com/a/56581709
+    """
+
+    def pattern(r, c):
+        return (base * (r % base) + r // base + c) % n
+
+    rows = [g * base + r for g in np.random.permutation(base) for r in np.random.permutation(base)]
+    cols = [g * base + c for g in np.random.permutation(base) for c in np.random.permutation(base)]
+    nums = np.random.permutation(np.arange(1, n + 1))
+
+    return np.array([[nums[pattern(r, c)] for c in cols] for r in rows], dtype=np.int_)
+
+
+def sudoku_generate(mask_rate: float = 0.5) -> np.ndarray:
+    m = _generate_full_grid()
 
     mm = m.copy()
     mm[np.random.choice([True, False], size=m.shape, p=[
@@ -397,7 +396,7 @@ def sudoku_generate(mask_rate=0.5):
     return mm
 
 
-def sudoku_check_solution(m):
+def sudoku_check_solution(m: "np.ndarray | list | str") -> bool:
     if isinstance(m, list):
         m = np.array(m)
     elif isinstance(m, str):
@@ -422,13 +421,13 @@ def sudoku_check_solution(m):
     return not no_good
 
 
-def sudoku_solve_solution1(array):
+def sudoku_solve_solution1(array: "np.ndarray | list") -> np.ndarray:
     sudo = Sudoku(array)
     sudo.sudo_solve()
     return sudo.value
 
 
-def sudoku_solve_solution2(array):
+def sudoku_solve_solution2(array: "np.ndarray | list | str") -> np.ndarray:
     if isinstance(array, list):
         array = np.array(array)
     elif isinstance(array, str):
@@ -464,7 +463,7 @@ def sudoku_solve_solution2(array):
     return mt
 
 
-def sudoku_solve_solution(array, method=1):
+def sudoku_solve_solution(array: "np.ndarray | list | str", method: int = 1) -> np.ndarray:
     if method == 1:
         return sudoku_solve_solution1(array)
     else:
