@@ -5,15 +5,38 @@ build-backend = "hatchling.build"
 [project]
 name = "fungame"
 version = "1.0.9"
-description = "Add your description here"
+description = "小游戏合集：nonogram（数织）、sudoku（数独）求解与生成、topwar 地图巡查工具等"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
-dependencies = [ "funsecret>=1.4.0", "numpy",]
+dependencies = [
+    "farlog>=1.1.7",
+    "funsecret>=1.4.0",
+    "funshell>=1.0.9",
+    "numpy>=1.21",
+    "pandas>=1.3.0",
+    "pillow>=9.0.0",
+    "tqdm>=4.60.0",
+    "websocket-client>=1.0.0",
+]
+
+[project.optional-dependencies]
+# shumo 为一次性数学建模竞赛代码（未再维护），仅在需要运行该部分脚本时才需要
+shumo = [
+    "xgboost>=1.6.0",
+]
 
 [dependency-groups]
-dev = [ "pytest",]
+dev = [
+    "pytest>=7.0",
+]
 
 [tool.hatch.build.targets.wheel]
 # src/notegame is the deprecated `notegame` -> `fungame` compat shim, kept for
 # existing `import notegame` users; new code should import `fungame` directly.
 packages = ["src/fungame", "src/notegame"]
+
+[tool.pytest.ini_options]
+# examples/ 下的 nonogram 是未接入本包构建的第三方参考代码（原 pynogram 项目），
+# 限定测试收集范围到 tests/，避免 pytest 误收集它。
+testpaths = ["tests"]
