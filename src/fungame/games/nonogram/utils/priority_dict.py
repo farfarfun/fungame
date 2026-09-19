@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Based on Matteo Dell'Amico's solution
 https://gist.github.com/matteodellamico/4451520
 """
 
-from heapq import heapify, heappush, heappop
-
-from six import iteritems
+from heapq import heapify, heappop, heappush
 
 
 class PriorityDict(dict):
@@ -30,7 +27,7 @@ class PriorityDict(dict):
         self._rebuild_heap()
 
     def _rebuild_heap(self):
-        self._heap = [(val, key) for key, val in iteritems(self)]
+        self._heap = [(val, key) for key, val in self.items()]
         heapify(self._heap)
 
     def smallest(self):

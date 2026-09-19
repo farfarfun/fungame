@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
 
 
 import re
 import string
 from collections import OrderedDict, namedtuple
 
-from funtool.log import logger
-from six import integer_types, itervalues, string_types
+from farlog import getLogger
 
 from ..utils.iter import expand_generator
+
+logger = getLogger("fungame")
 
 
 class Color(object):
@@ -55,7 +55,7 @@ class Color(object):
         if len(rgb) in (3, 6) and all(letter in string.hexdigits for letter in rgb):
             return '#' + rgb
 
-        if isinstance(rgb, string_types) and self.RGB_TRIPLET_RE.match(rgb):
+        if isinstance(rgb, str) and self.RGB_TRIPLET_RE.match(rgb):
             return 'rgb({})'.format(rgb)
 
         return rgb
@@ -81,7 +81,7 @@ class ColorMap(OrderedDict):
 
     def iter_colors(self):
         """Iterate over stored colors"""
-        return itervalues(self)
+        return iter(self.values())
 
     _MIN_ID = 1 << 2
     _SYMBOLS = string.punctuation + string.ascii_uppercase + string.ascii_lowercase
@@ -125,7 +125,7 @@ class ColorMap(OrderedDict):
 
         if name in self:
             color = self[name]
-            logger.info('Color %r already found: %r', name, color)
+            logger.info('Color {!r} already found: {!r}', name, color)
 
             color.rgb = rgb
             if symbol is not None:
@@ -190,9 +190,9 @@ def normalize_description_colored(row, color_map):
     res = []
     for block in row:
         item = None
-        if isinstance(block, integer_types):
+        if isinstance(block, int):
             item = (block, black_color)
-        elif isinstance(block, string_types):
+        elif isinstance(block, str):
             match = _COLOR_DESCRIPTION_RE.match(block)
             if match:
                 item = (int(match.group(1)), match.group(2))

@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
 """Define nonogram solver that solves line-by-line"""
 
 import time
 
-from funtool.log import logger
-from six.moves import range, zip
+from farlog import getLogger
 
 from ..solver import solve_line
 from ..utils.priority_dict import PriorityDict
 from .common import BOX, SPACE, UNKNOWN, is_color_cell
+
+logger = getLogger("fungame")
 
 
 def _is_pixel_updated(old, new):
@@ -233,6 +233,6 @@ def _solve_with_method(
         #     LOG.warning('The nonogram is not solved full (%r). The rate is %.4f',
         #                 method, rate)
         logger.info('Full solution: %.6f sec', time.time() - start)
-        logger.info('Lines solved: %i', lines_solved)
+        logger.info('Lines solved: {}', lines_solved)
 
     return total_cells_solved, all_jobs

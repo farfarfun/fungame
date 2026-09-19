@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
 
 from collections import defaultdict
 from functools import wraps
 from time import time
 
-from funtool.log import logger
+from farlog import getLogger
+
+logger = getLogger("fungame")
 
 
 class Cache(object):
@@ -43,7 +44,7 @@ class Cache(object):
 
         if len(self) >= self.max_size:
             logger.warning(
-                'Maximum size for cache reached (%s).', self.max_size)
+                'Maximum size for cache reached ({}).', self.max_size)
             self._clear()
             self._increase_size()
 
@@ -76,7 +77,7 @@ class Cache(object):
             new_max = self.max_size * self.increase
             self.max_size = min(new_max, self.do_not_increase_after)
         else:
-            logger.info('Bad increase multiplier: %s', self.increase)
+            logger.info('Bad increase multiplier: {}', self.increase)
 
     def delete(self, name):
         """Just drop the value from a cache"""

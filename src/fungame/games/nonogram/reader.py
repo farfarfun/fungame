@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Defines methods to parse data file with the board defined
 """
 
 import os
 import re
-
-from six import PY2, string_types
-from six.moves.configparser import RawConfigParser
+from configparser import RawConfigParser
 
 from fungame.games.nonogram.core.color import ColorMap
 
@@ -20,22 +17,6 @@ def parse_line(description, inline_comments=_INLINE_COMMENT_PREFIXES):
     """
     Parse a line and correctly add the description(s) to a collection
     """
-
-    # manually strip out the comments
-    # py2 cannot ignore comments on a continuation line
-    # https://stackoverflow.com/q/9110428/1177288
-    #
-    # PY3 can do it for you with 'inline_comment_prefixes' = '#;'
-    if PY2:
-        for comment_prefix in inline_comments:
-            pos = description.find(comment_prefix)
-            if pos != -1:
-                # comment line or inline comment (after a space)
-                if pos == 0 or description[pos - 1].isspace():
-                    description = description[:pos]
-
-        if not description:
-            return None
 
     # there can be trailing commas if you copy from source code
     descriptions = description.strip(',').split(',')
@@ -85,11 +66,10 @@ class MultiLineConfigParser(RawConfigParser, object):
 
     def __init__(self, *args, **kwargs):
         # allow '#' or ';' as the start of a comment
-        if not PY2 and 'inline_comment_prefixes' not in kwargs:
+        if 'inline_comment_prefixes' not in kwargs:
             kwargs['inline_comment_prefixes'] = _INLINE_COMMENT_PREFIXES
 
-        # noinspection PyArgumentList
-        super(MultiLineConfigParser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_list(self, section, option):
         """Split the value into list, remove empty items"""
@@ -105,16 +85,10 @@ def read_ini(content):
 
     parser = MultiLineConfigParser()
 
-    if isinstance(content, string_types):
+    if isinstance(content, str):
         content = open(content)
 
-    if PY2:
-        # it's not deprecated for python2
-        # noinspection PyDeprecation
-        parser.readfp(content)  # pylint: disable=deprecated-method
-    else:
-        # readfp is deprecated in future versions
-        parser.read_file(content)
+    parser.read_file(content)
 
     columns = []
     for col in parser.get_list('clues', 'columns'):

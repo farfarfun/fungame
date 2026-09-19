@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Nonogram solver using finite state machine
 
@@ -6,17 +5,25 @@ See source article (in russian):
 http://window.edu.ru/resource/781/57781
 """
 
-from funtool.log import logger
-from six import iteritems, itervalues
-from six.moves import range
+from farlog import getLogger
 
-from ..core.common import (BOX, SPACE, SPACE_COLORED, UNKNOWN, NonogramError,
-                           is_list_like, normalize_description, normalize_row)
+from ..core.common import (
+    BOX,
+    SPACE,
+    SPACE_COLORED,
+    UNKNOWN,
+    NonogramError,
+    is_list_like,
+    normalize_description,
+    normalize_row,
+)
 from ..utils import fsm
 from ..utils.cache import Cache
 from ..utils.iter import expand_generator
 from .base import BaseLineSolver
 from .simpson import FastSolver
+
+logger = getLogger("fungame")
 
 
 class NonogramFSM(fsm.FiniteStateMachine):
@@ -76,7 +83,7 @@ class NonogramFSM(fsm.FiniteStateMachine):
         from the description
         given in a nonogram definition
         """
-        logger.debug('Clues: %s', description)
+        logger.debug('Clues: {}', description)
 
         state_counter = cls.INITIAL_STATE
 
@@ -91,26 +98,26 @@ class NonogramFSM(fsm.FiniteStateMachine):
             # if it is not a first block AND the previous block was of the same color
             if prev_color == color:
                 trans, state_counter = cls._required_space(state_counter)
-                logger.debug('Add transition: %s -> %s', trans, state_counter)
+                logger.debug('Add transition: {} -> {}', trans, state_counter)
                 yield trans, state_counter
 
             # it CAN be multiple spaces before every block
             trans, state_counter = cls._optional_space(state_counter)
-            logger.debug('Add transition: %s -> %s', trans, state_counter)
+            logger.debug('Add transition: {} -> {}', trans, state_counter)
             yield trans, state_counter
 
             # the block of some color
             for _ in range(value):
                 trans, state_counter = cls._required_color(
                     state_counter, color)
-                logger.debug('Add transition: %s -> %s', trans, state_counter)
+                logger.debug('Add transition: {} -> {}', trans, state_counter)
                 yield trans, state_counter
 
             prev_color = color
 
         # at the end of the line can be optional spaces
         trans, state_counter = cls._optional_space(state_counter)
-        logger.debug('Add transition: %s -> %s', trans, state_counter)
+        logger.debug('Add transition: {} -> {}', trans, state_counter)
         yield trans, state_counter
 
     def partial_match(self, row):
@@ -136,7 +143,7 @@ class NonogramFSM(fsm.FiniteStateMachine):
                         next_step = self.reaction(BOX, current_state=state)
                         if next_step is None:
                             logger.debug(
-                                'Cannot go from state %r with BOX', state)
+                                'Cannot go from state {!r} with BOX', state)
                         else:
                             step_possible_states.append(next_step)
 
@@ -146,18 +153,18 @@ class NonogramFSM(fsm.FiniteStateMachine):
                         next_step = self.reaction(SPACE, current_state=state)
                         if next_step is None:
                             logger.debug(
-                                'Cannot go from state %r with SPACE', state)
+                                'Cannot go from state {!r} with SPACE', state)
                         else:
                             step_possible_states.append(next_step)
 
                 if not step_possible_states:
                     return False
 
-                logger.debug('Possible states after step %s: %s',
+                logger.debug('Possible states after step {}: {}',
                              i, step_possible_states)
                 possible_states = set(step_possible_states)
 
-            logger.debug('Possible states after full scan: %s',
+            logger.debug('Possible states after full scan: {}',
                          possible_states)
             return self.final_state in possible_states
         finally:
@@ -178,17 +185,17 @@ class NonogramFSM(fsm.FiniteStateMachine):
             if cell in (BOX, SPACE):
                 continue
 
-            logger.debug('Trying to guess the %s cell', i)
+            logger.debug('Trying to guess the {} cell', i)
 
             temp_row = list(original_row)
             temp_row[i] = BOX
             can_be_box = self.partial_match(temp_row)
-            logger.debug('The %s cell can%s be a BOX',
+            logger.debug('The {} cell can{} be a BOX',
                          i, '' if can_be_box else 'not')
 
             temp_row[i] = SPACE
             can_be_space = self.partial_match(temp_row)
-            logger.debug('The %s cell can%s be a SPACE',
+            logger.debug('The {} cell can{} be a SPACE',
                          i, '' if can_be_space else 'not')
 
             if can_be_box:
@@ -221,12 +228,12 @@ class NonogramFSM(fsm.FiniteStateMachine):
         def _shift_one_cell(cell_type, trans_index,
                             previous_step_state, previous_state, desc_cell=None):
             if desc_cell:  # pragma: no cover
-                logger.debug('Add states with %s transition', desc_cell)
+                logger.debug('Add states with {} transition', desc_cell)
 
             new_state = self.reaction(cell_type, previous_state)
             if new_state is None:
                 if desc_cell:  # pragma: no cover
-                    logger.debug('Cannot go from %s with the %s cell',
+                    logger.debug('Cannot go from {} with the {} cell',
                                  previous_state, desc_cell)
             else:
                 transition_table.append_transition(
@@ -238,7 +245,7 @@ class NonogramFSM(fsm.FiniteStateMachine):
         for i, cell in enumerate(row):
             transition_index = i + 1
 
-            for prev_state, prev in iteritems(transition_table[i]):
+            for prev_state, prev in transition_table[i].items():
                 for _type in _types_for_cell(cell):
                     _shift_one_cell(_type, transition_index,
                                     prev, prev_state)
@@ -313,7 +320,7 @@ class _StepState(object):
 
     def __str__(self):
         previous_states = sorted(
-            iteritems(self.previous_states),
+            self.previous_states.items(),
             key=lambda x: x[0].state)
 
         return '({}): [{}]'.format(
@@ -355,8 +362,8 @@ class TransitionTable(list):
             if i > 0:
                 res.append('')
             res.append(i)
-            res.extend(sorted(itervalues(states), key=lambda x: x.state))
-            # for state, step in iteritems(states):
+            res.extend(sorted(states.values(), key=lambda x: x.state))
+            # for state, step in states.items():
             #     res.append('({}): {}'.format(state, step))
 
         return '\n'.join(map(str, res))
@@ -377,7 +384,7 @@ class TransitionTable(list):
 
             for state in possible_states:
                 step = row[state]
-                for prev, cell_type in iteritems(step.previous_states):
+                for prev, cell_type in step.previous_states.items():
                     step_possible_cell_types.add(cell_type)
                     step_possible_states.add(prev.state)
 

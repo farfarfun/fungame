@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
 """Define nonogram solver that uses contradictions"""
 
 import time
 from collections import OrderedDict, defaultdict, deque
 from itertools import product
 
-from funtool.log import logger
-from six import iteritems
-from six.moves import range
+from farlog import getLogger
 
 from fungame.games.nonogram.core import propagation
 from fungame.games.nonogram.core.board import CellPosition, CellState
@@ -15,6 +12,8 @@ from fungame.games.nonogram.core.common import NonogramError
 from fungame.games.nonogram.solver.base import cache_info
 from fungame.games.nonogram.utils.iter import expand_generator
 from fungame.games.nonogram.utils.priority_dict import PriorityDict
+
+logger = getLogger("fungame")
 
 USE_CONTRADICTION_RESULTS = True
 
@@ -42,7 +41,7 @@ class _SearchNode(object):
             'value': self.value,
             'children': OrderedDict(
                 (str(k), v.to_dict())
-                for k, v in iteritems(self.children)
+                for k, v in self.children.items()
             )
         }
 
@@ -114,7 +113,7 @@ class Solver(object):
         :type cell_state: CellState
         """
         board = self.board
-        logger.debug('Assume that (%i, %i) is %s',  *tuple(cell_state))
+        logger.debug('Assume that ({}, {}) is {}',  *tuple(cell_state))
 
         board.set_color(cell_state)
 
@@ -185,7 +184,7 @@ class Solver(object):
             before_contradiction = None
 
         pos = cell_state.position
-        logger.info('Found contradiction at (%i, %i)' , *pos)
+        logger.info('Found contradiction at ({}, {})' , *pos)
         try:
             board.unset_color(cell_state)
         except ValueError as ex:
@@ -306,7 +305,7 @@ class Solver(object):
                                'the last found contradiction (%s)' % (len(expired_assumptions)))
                 refill_processed = self._get_all_unsolved_jobs(
                     choose_from_cells=expired_assumptions)
-                for new_job, priority in iteritems(refill_processed):
+                for new_job, priority in refill_processed.items():
                     jobs[new_job] = priority
 
                 # they are no longer expired, as they active now!
@@ -325,7 +324,7 @@ class Solver(object):
     def _probes_from_rates(self, rates):
         jobs_with_rates = defaultdict(dict)
 
-        for cell_state, (rate, priority) in iteritems(rates):
+        for cell_state, (rate, priority) in rates.items():
             pos = cell_state.position
             color = cell_state.color
             if self.board.is_cell_solved(pos):
@@ -339,16 +338,16 @@ class Solver(object):
             jobs_with_rates[pos][color] = rate
 
         max_rate = {pos: max(v.values())
-                    for pos, v in iteritems(jobs_with_rates)}
+                    for pos, v in jobs_with_rates.items()}
         # the biggest rate appears first
-        best = sorted(iteritems(max_rate), key=lambda x: x[1], reverse=True)
+        best = sorted(max_rate.items(), key=lambda x: x[1], reverse=True)
         if FEW_COLORS_FIRST:
             best = sorted(best, key=lambda x: len(jobs_with_rates[x[0]]))
         logger.debug('\n'.join(map(str, best)))
 
         for pos, max_rate in best:
             colors = sorted(
-                iteritems(jobs_with_rates[pos]), key=lambda x: x[1], reverse=True)
+                jobs_with_rates[pos].items(), key=lambda x: x[1], reverse=True)
             for color, rate in colors:
                 yield CellState.from_position(pos, color)
 
@@ -426,7 +425,7 @@ class Solver(object):
                 new_candidate = CellState(
                     row_index, col_index - skip_first_columns, color)
                 candidates[index] = new_candidate
-                logger.info('Fixed candidate: %r -> %r',
+                logger.info('Fixed candidate: {!r} -> {!r}',
                             candidate, new_candidate)
 
         return candidates
@@ -436,13 +435,13 @@ class Solver(object):
         for index, candidate in enumerate(candidates):  # type: CellState
             row_index, col_index, color = candidate
             if color not in color_mapping:
-                logger.warning('Bad candidate %r', candidate)
+                logger.warning('Bad candidate {!r}', candidate)
                 continue
 
             new_candidate = CellState(
                 row_index, col_index, color_mapping[color])
             candidates[index] = new_candidate
-            logger.info('Fixed candidate: %r -> %r', candidate, new_candidate)
+            logger.info('Fixed candidate: {!r} -> {!r}', candidate, new_candidate)
 
         return candidates
 
@@ -465,7 +464,7 @@ class Solver(object):
         found_contradictions, best_candidates = self._solve_without_search(
             to_the_max=True)
         current_solution_rate = board.solution_rate
-        logger.warning('Contradictions (found %d): %f',
+        logger.warning('Contradictions (found {}): %f',
                        found_contradictions, current_solution_rate)
 
         if current_solution_rate < 1:
@@ -477,8 +476,7 @@ class Solver(object):
             if board.is_colored:
                 single_colored, color_mapping = board.reduce_to_single_color()
                 if single_colored is not None:
-                    logger.warning('Replacing colored board with the '
-                                   'equivalent black and white: %r', color_mapping)
+                    logger.warning('Replacing colored board with the equivalent black and white: {!r}', color_mapping)
 
                     # from now we will search the black and white board
                     self.board = single_colored
@@ -489,7 +487,7 @@ class Solver(object):
             board.restore_reduced()
 
             current_solution_rate = board.solution_rate
-            logger.warning('Search completed (depth reached: %d, solutions found: %d)',
+            logger.warning('Search completed (depth reached: {}, solutions found: {})',
                            self.depth_reached, len(board.solutions))
 
         if current_solution_rate != 1:
@@ -501,7 +499,7 @@ class Solver(object):
         for method, info in cache_info().items():
             size, hit_rate = info
             if size > 0:
-                logger.warning('%s cache: size=%d, hit rate=%.4f%%',
+                logger.warning('{} cache: size={}, hit rate=%.4f%%',
                                method, size, hit_rate * 100.0)
 
     def _limits_reached(self, depth):
@@ -515,7 +513,7 @@ class Solver(object):
             if solutions_number >= self.max_solutions:
                 if depth == 0:
                     # only show log on the top level
-                    logger.warning('%d solutions is enough', solutions_number)
+                    logger.warning('{} solutions is enough', solutions_number)
 
                 return True
 
@@ -556,19 +554,19 @@ class Solver(object):
 
             __, best_candidates = self._solve_jobs(probe_jobs)
         except NonogramError as ex:
-            logger.warning('Dead end found (%s): %s', full_path[-1], str(ex))
+            logger.warning('Dead end found ({}): {}', full_path[-1], str(ex))
             self._add_search_result(full_path, False)
             return False
 
         rate = board.solution_rate
-        logger.info('Reached rate %.4f on %s path', rate, full_path)
+        logger.info('Reached rate %.4f on {} path', rate, full_path)
         self._add_search_result(full_path, rate)
 
         if rate == 1 or self._limits_reached(depth):
             return True
 
         cells_left = round((1 - rate) * board.width * board.height)
-        logger.info('Unsolved cells left: %d', cells_left)
+        logger.info('Unsolved cells left: {}', cells_left)
 
         if best_candidates:
             return self.search(best_candidates, path=full_path)
@@ -601,7 +599,7 @@ class Solver(object):
             return True
 
         if self.max_depth and depth >= self.max_depth:
-            logger.warning('Next step on the depth %d is deeper than the max (%d)',
+            logger.warning('Next step on the depth {} is deeper than the max ({})',
                            depth, self.max_depth)
             return True
 
@@ -631,13 +629,12 @@ class Solver(object):
                 cell_colors = board.cell_colors(pos)
 
                 if assumption not in cell_colors:
-                    logger.warning("The assumption '%s' is already expired. "
-                                   "Possible colors for %s are %s",
+                    logger.warning("The assumption '{}' is already expired. Possible colors for {} are {}",
                                    assumption, pos, cell_colors)
                     continue
 
                 if len(cell_colors) == 1:
-                    logger.warning('Only one color for cell %r left: %s. Solve it unconditionally',
+                    logger.warning('Only one color for cell {!r} left: {}. Solve it unconditionally',
                                    pos, assumption)
                     assert assumption == tuple(cell_colors)[0]
                     if unconditional:
@@ -651,9 +648,7 @@ class Solver(object):
                     except NonogramError:
                         # the whole `path` branch of a search tree is a dead end
                         logger.warning(
-                            "The last possible color '%s' for the cell '%s' "
-                            "lead to the contradiction. "
-                            "The path %s is invalid", assumption, pos, path)
+                            "The last possible color '{}' for the cell '{}' lead to the contradiction. The path {} is invalid", assumption, pos, path)
                         # self._add_search_result(path, False)
                         return False
 
@@ -662,21 +657,20 @@ class Solver(object):
                     if board.is_solved_full:
                         self._add_solution()
                         logger.warning(
-                            "The only color '%s' for the cell '%s' lead to full solution. "
-                            "No need to traverse the path %s anymore", assumption, pos, path)
+                            "The only color '{}' for the cell '{}' lead to full solution. No need to traverse the path {} anymore", assumption, pos, path)
                         return True
                     continue
 
                 full_path = path + (state,)
                 if self._is_explored(full_path):
-                    logger.info('The path %s already explored', full_path)
+                    logger.info('The path {} already explored', full_path)
                     continue
 
                 unconditional = False
                 rate = board.solution_rate
                 guess_save = board.make_snapshot()
                 try:
-                    logger.warning('Trying state (%d/%d): %s (depth=%d, rate=%.4f, previous=%s)',
+                    logger.warning('Trying state ({}/{}): {} (depth={}, rate=%.4f, previous={})',
                                    search_counter, total_number_of_directions,
                                    state, depth, rate, path)
                     self._add_search_result(path, rate)
@@ -690,7 +684,7 @@ class Solver(object):
                     # TODO: add backjumping here
                     try:
                         logger.warning(
-                            "Unset the color %s for cell '%s'. Solve it unconditionally",
+                            "Unset the color {} for cell '{}'. Solve it unconditionally",
                             assumption, pos)
                         board.unset_color(state)
                         self._solve_without_search()
@@ -698,9 +692,7 @@ class Solver(object):
                     except ValueError:
                         # the whole `path` branch of a search tree is a dead end
                         logger.warning(
-                            "The last possible color '%s' for the cell '%s' "
-                            "lead to the contradiction. "
-                            "The whole branch (depth=%d) is invalid. ", assumption, pos, depth)
+                            "The last possible color '{}' for the cell '{}' lead to the contradiction. The whole branch (depth={}) is invalid. ", assumption, pos, depth)
                         # self._add_search_result(path, False)
                         return False
 
@@ -709,8 +701,7 @@ class Solver(object):
                     if board.is_solved_full:
                         self._add_solution()
                         logger.warning(
-                            "The negation of color '%s' for the cell '%s' lead to full solution. "
-                            "No need to traverse the path %s anymore", assumption, pos, path)
+                            "The negation of color '{}' for the cell '{}' lead to full solution. No need to traverse the path {} anymore", assumption, pos, path)
                         return True
 
                 if not success or board.is_solved_full:

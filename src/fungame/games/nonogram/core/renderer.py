@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Defines various renderers for the game of nonogram
 """
@@ -6,12 +5,13 @@ Defines various renderers for the game of nonogram
 from abc import ABC
 from sys import stdout
 
-from funtool.log import logger
-from six import integer_types, itervalues, text_type
+from farlog import getLogger
 
 from ..utils.iter import max_safe, pad
 from ..utils.other import two_powers
 from .common import BOX, SPACE, UNKNOWN, BlottedBlock, is_list_like
+
+logger = getLogger("fungame")
 
 
 class Cell(object):
@@ -58,8 +58,8 @@ class ClueCell(Cell):
         Gets a symbolic representation of a cell given its state
         and predefined table `icons`
         """
-        if isinstance(self.value, integer_types):
-            return text_type(self.value)
+        if isinstance(self.value, int):
+            return str(self.value)
 
         if self.value == BlottedBlock:
             return self.BLOTTED_SYMBOL
@@ -129,7 +129,7 @@ class Renderer(object):
     def board_init(self, board=None):
         """Initialize renderer's properties dependent on board it draws"""
         if board:
-            logger.info('Init %r renderer with board %r',
+            logger.info('Init {!r} renderer with board {!r}',
                         self.__class__.__name__, board)
         else:
             if self.board:
@@ -223,7 +223,7 @@ class BaseAsciiRenderer(StreamRenderer):
 
     def board_init(self, board=None):
         super(BaseAsciiRenderer, self).board_init(board)
-        logger.info('init cells: %sx%s', self.full_width, self.full_width)
+        logger.info('init cells: {}x{}', self.full_width, self.full_width)
 
         self.cells = [[Cell()] * self.full_width
                       for _ in range(self.full_height)]
@@ -294,7 +294,7 @@ class BaseAsciiRenderer(StreamRenderer):
 
 def _register_renderers():
     res = dict()
-    for obj in itervalues(globals()):
+    for obj in globals().values():
         if isinstance(obj, type):
             if issubclass(obj, StreamRenderer) and hasattr(obj, '__rend_name__'):
                 res[obj.__rend_name__] = obj

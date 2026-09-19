@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
 """
 Defines the basic terms and functions for nonogram game
 """
 
 
-from funtool.log import logger
-from six import integer_types, iteritems, string_types, with_metaclass
-from six.moves import range
+from farlog import getLogger
 
 from fungame.games.nonogram.core.color import Color, ColorBlock
 from fungame.games.nonogram.utils.iter import expand_generator, list_replace
+
+logger = getLogger("fungame")
 
 # this cell has to be solved
 UNKNOWN = None
@@ -62,10 +61,10 @@ def normalize_description(row, color=False):
     if isinstance(row, (tuple, list)):
         return tuple(row)
 
-    if isinstance(row, integer_types):
+    if isinstance(row, int):
         return row,  # it's a tuple!
 
-    if isinstance(row, string_types):
+    if isinstance(row, str):
         blocks = row.split()
         if color:
             return tuple(blocks)
@@ -94,14 +93,14 @@ def normalize_row(row):
     if is_color_list(row):
         return row
 
-    logger.debug('All row symbols: %s', alphabet)
+    logger.debug('All row symbols: {}', alphabet)
     # save original for logs and debug
     original, row = row, list(row)
 
-    for formal, informal in iteritems(INFORMAL_REPRESENTATIONS):
+    for formal, informal in INFORMAL_REPRESENTATIONS.items():
         informal = set(informal) & alphabet
         if not informal:
-            logger.debug('Not found %r in a row', formal)
+            logger.debug('Not found {!r} in a row', formal)
             continue
 
         if len(informal) > 1:
@@ -111,7 +110,7 @@ def normalize_row(row):
                     ', '.join(sorted(informal)), formal, original))
 
         informal = informal.pop()
-        logger.debug('Replace %r with a %r', informal, formal)
+        logger.debug('Replace {!r} with a {!r}', informal, formal)
         list_replace(row, informal, formal)
 
     assert set(row).issubset(FORMAL_ALPHABET)
@@ -217,7 +216,7 @@ class _BlottedMeta(type):
         return 'BLOTTED'
 
 
-class BlottedBlock(with_metaclass(_BlottedMeta, object)):
+class BlottedBlock(object, metaclass=_BlottedMeta):
     """
     The size of the block is unknown
     (try to solve by hand https://webpbn.com/19407 to grasp the concept)

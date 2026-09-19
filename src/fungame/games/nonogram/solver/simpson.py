@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Simple algorithm to solve nonograms using left and right overlaps
 
@@ -6,11 +5,12 @@ See details:
 http://www.lancaster.ac.uk/~simpsons/nonogram/ls-fast
 """
 
-from funtool.log import logger
-from six.moves import range
+from farlog import getLogger
 
 from ..core.common import BOX, SPACE, UNKNOWN, NonogramError
 from .base import BaseLineSolver
+
+logger = getLogger("fungame")
 
 _SYMBOL_MAP = {
     UNKNOWN: ' ',
@@ -43,8 +43,8 @@ class FastSolver(BaseLineSolver):
         if clue_size > 0:
             res[current_block] = 0
 
-        logger.info('Pushing clue: %s', ', '.join(map(str, clue)))
-        logger.info('Pushing line: >%s<', ''.join(
+        logger.info('Pushing clue: {}', ', '.join(map(str, clue)))
+        logger.info('Pushing line: >{}<', ''.join(
             _SYMBOL_MAP.get(cell, '?') for cell in line))
 
         while current_block < clue_size:
@@ -54,7 +54,7 @@ class FastSolver(BaseLineSolver):
             pos = res[current_block]
             block_size = clue[current_block]
 
-            logger.debug('     start %d >%s %d',
+            logger.debug('     start {} >{} {}',
                          current_block, pos, block_size)
 
             while pos < line_size - block_size:
@@ -65,7 +65,7 @@ class FastSolver(BaseLineSolver):
                 pos += 1
 
             res[current_block] = pos
-            logger.debug('     end %d >%s %d', current_block, pos, block_size)
+            logger.debug('     end {} >{} {}', current_block, pos, block_size)
 
             # no room left
             if (pos + block_size > line_size) or (line[pos] == SPACE):
@@ -84,14 +84,14 @@ class FastSolver(BaseLineSolver):
                     break
 
                 if (solid[current_block] < 0) and (cell == BOX):
-                    logger.debug('     solid %d >%s#',
+                    logger.debug('     solid {} >{}#',
                                  current_block, (pos + i))
                     solid[current_block] = i
                 i += 1
 
             # if a dot was encountered...
             if i < block_size:
-                logger.debug('     dot %d >%s-', current_block, (pos + i))
+                logger.debug('     dot {} >{}-', current_block, (pos + i))
 
                 # if a solid is covered, get an earlier current_block to fit
                 if solid[current_block] >= 0:
@@ -145,7 +145,7 @@ class FastSolver(BaseLineSolver):
 
             res[current_block] = pos
 
-            logger.debug('     shuffle %s >%s %d',
+            logger.debug('     shuffle {} >{} {}',
                          current_block, pos, block_size)
 
             # if there's still a solid immediately after the current_block, there's
@@ -153,7 +153,7 @@ class FastSolver(BaseLineSolver):
             if pos + block_size < line_size:
                 end_block_cell = line[pos + block_size]
                 if end_block_cell == BOX:
-                    logger.debug('     stretched %d >%s#',
+                    logger.debug('     stretched {} >{}#',
                                  current_block, (pos + i))
 
                     # find an earlier current_block that isn't covering a solid
@@ -193,7 +193,7 @@ class FastSolver(BaseLineSolver):
 
                 # if a solid was found...
                 if pos < line_size:
-                    logger.debug('     trailing >%s#', pos)
+                    logger.debug('     trailing >{}#', pos)
 
                     # move the current_block so it covers it, but check if solid
                     # becomes uncovered
@@ -254,7 +254,7 @@ class FastSolver(BaseLineSolver):
         line_size = len(line)
         clue_size = len(clue)
 
-        logger.debug('Line range = %s to %s', 0, line_size - 1)
+        logger.debug('Line range = {} to {}', 0, line_size - 1)
 
         if (clue_size == 1) and clue[0] == 0:
             clue_size = 0
@@ -265,7 +265,7 @@ class FastSolver(BaseLineSolver):
         for block in range(clue_size):
             left_desc.append('(%s + %s)' %
                              (left_positions[block], clue[block]))
-        logger.info('Left: %s', ' '.join(left_desc))
+        logger.info('Left: {}', ' '.join(left_desc))
         left_desc = []
         for block in range(clue_size):
             size_now = sum(map(len, left_desc))
@@ -275,12 +275,12 @@ class FastSolver(BaseLineSolver):
 
         desc_size = len(''.join(left_desc))
         left_desc.append('-' * (line_size - desc_size))
-        logger.info('Left: >%s<', ''.join(left_desc))
+        logger.info('Left: >{}<', ''.join(left_desc))
 
         middle_desc = [_SYMBOL_MAP.get(cell, '?') for cell in line]
-        logger.info('Middle: >%s<', ''.join(middle_desc))
+        logger.info('Middle: >{}<', ''.join(middle_desc))
 
-        logger.info('Line range = %d to %d', 0, line_size - 1)
+        logger.info('Line range = {} to {}', 0, line_size - 1)
 
         right_positions = self.push_right(line, clue)
 
@@ -288,7 +288,7 @@ class FastSolver(BaseLineSolver):
         for block in range(clue_size):
             right_desc.append('(%s + %s)' %
                               (right_positions[block], clue[block]))
-        logger.info('Right: %s', ' '.join(right_desc))
+        logger.info('Right: {}', ' '.join(right_desc))
         right_desc = []
         for block in range(clue_size):
             size_now = sum(map(len, right_desc))
@@ -300,7 +300,7 @@ class FastSolver(BaseLineSolver):
 
         desc_size = len(''.join(right_desc))
         right_desc.append('-' * (line_size - desc_size))
-        logger.info('Right: >%s<', ''.join(right_desc))
+        logger.info('Right: >{}<', ''.join(right_desc))
 
         work = list(line)
 

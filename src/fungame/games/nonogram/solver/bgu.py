@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Dynamic programming algorithm to solve nonograms (using recursion)
 
@@ -8,12 +7,12 @@ https://www.cs.bgu.ac.il/~benr/nonograms/
 
 from itertools import product
 
-from funtool.log import logger
-from six.moves import range, zip
+from farlog import getLogger
 
-from ..core.common import (BOX, SPACE, UNKNOWN, BlottedBlock, partial_sums,
-                           slack_space)
+from ..core.common import BOX, SPACE, UNKNOWN, BlottedBlock, partial_sums, slack_space
 from .base import BaseLineSolver, NonogramError
+
+logger = getLogger("fungame")
 
 # dummy constant
 BOTH_COLORS = -1
@@ -244,7 +243,7 @@ class BlottedSolver(BaseLineSolver):
         if other is None:
             return one
 
-        logger.debug('Merging two solutions: %r and %r', one, other)
+        logger.debug('Merging two solutions: {!r} and {!r}', one, other)
         return [cls._single_color(set(cells))
                 for cells in zip(one, other)]
 
@@ -258,11 +257,11 @@ class BlottedSolver(BaseLineSolver):
             return super(BlottedSolver, cls).solve(description, line)
 
         if cls.is_solved(description, line):
-            logger.info('No need to solve blotted line: %r', line)
+            logger.info('No need to solve blotted line: {!r}', line)
             return line
 
         blotted_desc, line = tuple(description), tuple(line)
-        logger.warning('Solving line %r with blotted description %r',
+        logger.warning('Solving line {!r} with blotted description {!r}',
                        line, blotted_desc)
 
         blotted_positions = [index for index, block in enumerate(blotted_desc)
@@ -280,21 +279,20 @@ class BlottedSolver(BaseLineSolver):
                 block = current_description[pos]
                 current_description[pos] = cls._update_block(block, block_size)
 
-            logger.debug('Trying %i-th combination %r',
+            logger.debug('Trying {}-th combination {!r}',
                          index, current_description)
 
             try:
                 solved = tuple(super(BlottedSolver, cls).solve(
                     current_description, line))
             except NonogramError:
-                logger.debug('Combination %r is invalid for line %r',
+                logger.debug('Combination {!r} is invalid for line {!r}',
                              current_description, line)
             else:
                 solution = cls.merge_solutions(solved, solution)
-                logger.debug('Merged solution: %s', solution)
+                logger.debug('Merged solution: {}', solution)
                 if tuple(solution) == line:
-                    logger.warning('The combination %r (description=%r) is valid but '
-                                   'brings no new information. Stopping the combinations search.',
+                    logger.warning('The combination {!r} (description={!r}) is valid but brings no new information. Stopping the combinations search.',
                                    combination, current_description)
                     break
 
@@ -302,7 +300,7 @@ class BlottedSolver(BaseLineSolver):
             raise NonogramError(
                 'Cannot solve with blotted clues {!r}'.format(blotted_desc))
 
-        logger.info('United solution from all combinations: %r', solution)
+        logger.info('United solution from all combinations: {!r}', solution)
         assert len(solution) == len(line)
         return tuple(solution)
 

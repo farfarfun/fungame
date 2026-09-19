@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 
 
-from funtool.log import logger
-from six import iteritems, text_type
+from farlog import getLogger
+
+logger = getLogger("fungame")
 
 
 class StateMachineError(ValueError):
@@ -53,8 +53,8 @@ class FiniteStateMachine(object):
         Change the state of a machine according to the
         `self.state_map` by applying an `action`
         """
-        logger.debug('Current state: %r', self.current_state)
-        logger.debug('Action: %r', action)
+        logger.debug('Current state: {!r}', self.current_state)
+        logger.debug('Action: {!r}', action)
 
         if action not in self.actions:
             raise StateMachineError("Action '{}' not available".format(
@@ -66,7 +66,7 @@ class FiniteStateMachine(object):
                 action, self.current_state), code=StateMachineError.BAD_TRANSITION)
         else:
             self._state = new_state
-            logger.debug('New state: %r', self.current_state)
+            logger.debug('New state: {!r}', self.current_state)
             return self.current_state
 
     def reaction(self, action, current_state=None):
@@ -108,14 +108,14 @@ class FiniteStateMachine(object):
         res = [
             '{}({});'.format(self.__class__.__name__, self.current_state),
             'All states: [{}];'.format(
-                ', '.join(sorted(map(text_type, self.states)))),
+                ', '.join(sorted(map(str, self.states)))),
             'All actions: [{}];'.format(
-                ', '.join(sorted(map(text_type, self.actions)))),
+                ', '.join(sorted(map(str, self.actions)))),
             'States map:',
         ]
         res.extend([
             '{}, {} -> {}'.format(state, action, new_state)
-            for (state, action), new_state in sorted(iteritems(self.state_map))])
+            for (state, action), new_state in sorted(self.state_map.items())])
 
         if self.final_state is not None:
             res.append('Final state: {}.'.format(self.final_state))
@@ -135,14 +135,14 @@ class FiniteStateMachine(object):
             raise RuntimeError('Cannot match: no final state defined')
 
         for letter in word:
-            logger.debug('Match letter %r of word %r', letter, word)
+            logger.debug('Match letter {!r} of word {!r}', letter, word)
             try:
                 prev = self.current_state
                 self.transition(letter)
-                logger.info('Transition from %r to %r with action %r',
+                logger.info('Transition from {!r} to {!r} with action {!r}',
                             prev, self.current_state, letter)
             except StateMachineError:
-                logger.info('Cannot do action %r in the state %r',
+                logger.info('Cannot do action {!r} in the state {!r}',
                             letter, self.current_state)
                 return False
 

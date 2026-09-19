@@ -1,17 +1,22 @@
-# -*- coding: utf-8 -*-
 from abc import ABC
 from collections import namedtuple
 from copy import copy
 
 import numpy as np
-from funtool.log import logger
-from six.moves import map, range, zip
+from farlog import getLogger
 
-from fungame.games.nonogram.core.common import (BOX, SPACE, UNKNOWN, invert,
-                                                 is_color_cell,
-                                                 normalize_description)
+from fungame.games.nonogram.core.common import (
+    BOX,
+    SPACE,
+    UNKNOWN,
+    invert,
+    is_color_cell,
+    normalize_description,
+)
 from fungame.games.nonogram.core.renderer import Renderer
 from fungame.games.nonogram.utils.iter import avg
+
+logger = getLogger("fungame")
 
 
 class CellPosition(namedtuple('Cell', 'row_index column_index')):
@@ -376,7 +381,7 @@ class MultipleSolutionGrid(NonogramGrid, ABC):
         for i, sol in enumerate(self.solutions):
             diff = next(self.diff(sol, self.cells, have_deletions=True), None)
             if diff is None:
-                logger.info('The solution is the same as the %d-th', i)
+                logger.info('The solution is the same as the {}-th', i)
                 if i > 2:
                     # faster to find repeated solutions that appear lately
                     logger.debug(
@@ -385,7 +390,7 @@ class MultipleSolutionGrid(NonogramGrid, ABC):
                 return True
 
             logger.info(
-                'The solution differs from %d-th one: first differ cell: %s', i, diff)
+                'The solution differs from {}-th one: first differ cell: {}', i, diff)
 
         return False
 
@@ -417,7 +422,7 @@ class MultipleSolutionGrid(NonogramGrid, ABC):
         if not self.solutions:
             return
 
-        logger.info('Number of full unique solutions: %s', len(self.solutions))
+        logger.info('Number of full unique solutions: {}', len(self.solutions))
 
         if not only_logs:
             for solution in self.solutions:
@@ -431,7 +436,7 @@ class MultipleSolutionGrid(NonogramGrid, ABC):
             for j, sol2 in enumerate(self.solutions[i + 1:]):
                 j = j + (i + 1)
                 diff = list(self.diff(sol1, sol2, have_deletions=True))
-                logger.info('%d vs %d: %d', i, j, len(diff))
+                logger.info('{} vs {}: {}', i, j, len(diff))
 
 
 class ReducibleGrid(SolvableGrid, MultipleSolutionGrid, ABC):
@@ -474,7 +479,7 @@ class ReducibleGrid(SolvableGrid, MultipleSolutionGrid, ABC):
             if line_solution_rate_func(row_index) != 1:
                 break
 
-            logger.info('Reducing solved row (column) %i: %r',
+            logger.info('Reducing solved row (column) {}: {!r}',
                         row_index, row_desc)
 
             if first:
@@ -491,7 +496,7 @@ class ReducibleGrid(SolvableGrid, MultipleSolutionGrid, ABC):
                 cells = cells[:-1]
                 solved_rows.insert(0, row)
 
-            logger.info('Removed description %r', removed_desc)
+            logger.info('Removed description {!r}', removed_desc)
 
             for col_index, (cell, col_desc) in enumerate(
                     zip(row, orthogonal_desc)):
@@ -501,7 +506,7 @@ class ReducibleGrid(SolvableGrid, MultipleSolutionGrid, ABC):
                 if cell == cls._space_value():
                     continue
 
-                logger.info('Reducing orthogonal description %i: %r',
+                logger.info('Reducing orthogonal description {}: {!r}',
                             col_index, col_desc)
                 cls._reduce_orthogonal_description(
                     col_desc, cell, first_rows=first)
@@ -590,9 +595,9 @@ class ReducibleGrid(SolvableGrid, MultipleSolutionGrid, ABC):
         reduced_size = self.height, self.width
 
         if original_size == reduced_size:
-            logger.warning('The board size: %r', original_size)
+            logger.warning('The board size: {!r}', original_size)
         else:
-            logger.warning('Reduced the board: %r --> %r',
+            logger.warning('Reduced the board: {!r} --> {!r}',
                            original_size, reduced_size)
 
         self.solved_columns = (first_solved_columns, last_solved_columns)
@@ -673,7 +678,7 @@ class ReducibleGrid(SolvableGrid, MultipleSolutionGrid, ABC):
         assert original_size == (len(self.cells), len(self.cells[0]))
 
         if original_size != reduced_size:
-            logger.warning('Restored the board: %r --> %r',
+            logger.warning('Restored the board: {!r} --> {!r}',
                            reduced_size, original_size)
 
 

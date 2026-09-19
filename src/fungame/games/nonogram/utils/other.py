@@ -1,20 +1,19 @@
-# -*- coding: utf-8 -*-
 """
 Here lie the utilities methods that does not depend on any domain
 e.g. manipulations with collections or streams.
 """
 
-import logging
 import multiprocessing
 import os
 import sys
 from contextlib import contextmanager
 from datetime import datetime
-from functools import wraps
+from functools import lru_cache, wraps
 from threading import Lock
 
-from memoized import memoized
-from six import iteritems, text_type
+from farlog import getLogger
+
+logger = getLogger("fungame")
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 START_TIME = datetime.now()
@@ -22,7 +21,7 @@ START_TIME = datetime.now()
 
 def get_uptime():  # pragma: no cover
     """Return the time program run in human-readable form"""
-    return text_type(datetime.now() - START_TIME)
+    return str(datetime.now() - START_TIME)
 
 
 _IMPORT_LOCK = Lock()
@@ -43,7 +42,7 @@ def extend_import_path(dir_name, first=False):
             else:
                 sys.path.append(dir_name)
 
-            logging.info('The %r added to the sys.path', dir_name)
+            logger.info(f"The {dir_name!r} added to the sys.path")
 
             try:
                 yield
@@ -53,7 +52,7 @@ def extend_import_path(dir_name, first=False):
                 else:
                     removed_path = sys.path.pop()
 
-                logging.info('The %r removed from the sys.path', removed_path)
+                logger.info(f"The {removed_path!r} removed from the sys.path")
                 assert dir_name == removed_path
 
 
@@ -75,7 +74,7 @@ def get_version():
 @contextmanager
 def terminating_mp_pool(*args, **kwargs):  # pragma: no cover
     """
-    Allows to use multiprocessing.Pool as a contextmanager in both PY2 and PY3
+    Allows to use multiprocessing.Pool as a contextmanager
 
     https://stackoverflow.com/a/25968716
     """
@@ -124,7 +123,7 @@ def log_call(log_func=print):  # pragma: no cover
 
             msg += ', '.join(map(str, _args))
             msg += ', '.join('{}={}'.format(k, v)
-                             for k, v in iteritems(kwargs))
+                             for k, v in kwargs.items())
 
             msg += ')'
 
@@ -140,7 +139,7 @@ def log_call(log_func=print):  # pragma: no cover
     return _decorator
 
 
-@memoized
+@lru_cache(maxsize=None)
 def two_powers(num):
     """
     Get a 'factorization' of number into powers of 2:
@@ -188,10 +187,8 @@ def get_named_logger(name__, file__, auto_config_when_main=True):
     """
     if name__ == '__main__':  # pragma: no cover
         name__ = os.path.basename(file__)
-        if auto_config_when_main:
-            logging.basicConfig()
 
-    return logging.getLogger(name__)
+    return getLogger(name__)
 
 
 @contextmanager

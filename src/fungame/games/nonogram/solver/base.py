@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 """Define nonogram solving operations"""
 
-from funtool.log import logger
-from six import add_metaclass, iteritems, itervalues
+from farlog import getLogger
 
 from ..core.common import SPACE_COLORED, BlottedBlock, NonogramError
 from ..utils.cache import Cache
 from ..utils.other import two_powers
+
+logger = getLogger("fungame")
 
 
 class TwoLayerCache(Cache):
@@ -16,7 +16,7 @@ class TwoLayerCache(Cache):
     """
 
     def __len__(self):
-        return sum(len(lines) for lines in itervalues(self._storage))
+        return sum(len(lines) for lines in self._storage.values())
 
     def _save(self, name, value, **kwargs):
         clue, prev_line = name
@@ -61,12 +61,11 @@ def cache_info():
     """Cache size and hit rate for different solvers"""
     return {
         class_name: (len(cache), cache.hit_rate)
-        for class_name, cache in iteritems(LineSolutionsMeta.registered_caches)
+        for class_name, cache in LineSolutionsMeta.registered_caches.items()
     }
 
 
-@add_metaclass(LineSolutionsMeta)
-class BaseLineSolver(object):
+class BaseLineSolver(object, metaclass=LineSolutionsMeta):
     """
     Basic line nonogram solver which provides
     facilities to save and extract solutions using cache
@@ -245,7 +244,7 @@ class TrimmedSolver(BaseLineSolver):
 
     @classmethod
     def _trim_solved_blocks(cls, description, line):
-        logger.info('Trying to trim off solved cells: %r, %r',
+        logger.info('Trying to trim off solved cells: {!r}, {!r}',
                     description, line)
 
         beg_solved, beg_blocks = cls.starting_solved(
@@ -284,8 +283,8 @@ class TrimmedSolver(BaseLineSolver):
 
         description, line, edges = cls._trim_solved_blocks(description, line)
         if any(edges):
-            logger.info('Trimmed edges: %r, %r', *edges)
-            logger.info('What is left after trimming: description %r and line %r',
+            logger.info('Trimmed edges: {!r}, {!r}', *edges)
+            logger.info('What is left after trimming: description {!r} and line {!r}',
                         description, line)
         if not line:  # all the cells are solved
             solved = edges[0]

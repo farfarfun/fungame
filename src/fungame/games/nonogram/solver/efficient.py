@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
 """
 Dynamic programming algorithm to solve nonograms (using recursion)
 
 See details in the work 'An Efficient Approach to Solving Nonograms':
 https://ir.nctu.edu.tw/bitstream/11536/22772/1/000324586300005.pdf
 """
-
-from six.moves import zip
 
 from ..core.common import BOX, SPACE, UNKNOWN, partial_sums
 from .base import BaseLineSolver, NonogramError

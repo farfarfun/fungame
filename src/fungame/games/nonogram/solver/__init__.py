@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
 """Define nonogram solving operations"""
 
 
-import logging
-
-from fungame.games.nonogram.core.common import (normalize_description,
-                                                 normalize_row)
-
-from fungame.games.nonogram.core.common import (normalize_description,                                                normalize_row)
+from fungame.games.nonogram.core.common import normalize_description, normalize_row
 
 from . import bgu, efficient, machine, simpson
 
