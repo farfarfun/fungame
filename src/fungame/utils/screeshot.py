@@ -1,16 +1,16 @@
-
-# -*- coding: utf-8 -*-
 """
 手机屏幕截图的代码
 """
 import os
-import subprocess
-import sys
-from io import StringIO
+from io import BytesIO
 
-from PIL import Image
+from farlog import getLogger
+from funshell import run_shell
+from PIL import Image, UnidentifiedImageError
 
 from .auto_adb import AutoADB
+
+logger = getLogger("fungame")
 
 adb = AutoADB()
 # SCREENSHOT_WAY 是截图方法，经过 check_screenshot 后，会自动递减，不需手动修改
@@ -24,41 +24,39 @@ def pull_screenshot():
     """
     global SCREENSHOT_WAY
     if 1 <= SCREENSHOT_WAY <= 3:
-        process = subprocess.Popen(
-            adb.adb_path + ' shell screencap -p',
-            shell=True, stdout=subprocess.PIPE)
-        binary_screenshot = process.stdout.read()
-        print(binary_screenshot)
+        binary_screenshot = run_shell(f"{adb.adb_path} shell screencap -p", printf=False).encode("utf-8")
         if SCREENSHOT_WAY == 2:
             binary_screenshot = binary_screenshot.replace(b'\r\n', b'\n')
         elif SCREENSHOT_WAY == 1:
             binary_screenshot = binary_screenshot.replace(b'\r\r\n', b'\n')
-        return Image.open(StringIO(binary_screenshot))
+        return Image.open(BytesIO(binary_screenshot))
     elif SCREENSHOT_WAY == 0:
-        adb.cate_hot_list('shell screencap -p /sdcard/autojump.png')
-        adb.cate_hot_list('pull /sdcard/autojump.png .')
+        run_shell(f"{adb.adb_path} shell screencap -p /sdcard/autojump.png")
+        run_shell(f"{adb.adb_path} pull /sdcard/autojump.png .")
         return Image.open('./autojump.png')
 
 
 def check_screenshot():
     """
-    检查获取截图的方式
+    检查获取截图的方式，依次尝试各截图方式，全部失败则抛出异常
     """
     global SCREENSHOT_WAY
     if os.path.isfile('autojump.png'):
         try:
             os.remove('autojump.png')
-        except Exception:
-            pass
+        except OSError as e:
+            logger.warning(f"删除临时截图文件失败: {e}")
+
     if SCREENSHOT_WAY < 0:
-        print('暂不支持当前设备')
-        sys.exit()
+        raise RuntimeError("暂不支持当前设备：所有截图方式均已尝试失败")
+
     try:
         im = pull_screenshot()
         im.load()
         im.close()
-        print('采用方式 {} 获取截图'.format(SCREENSHOT_WAY))
-    except Exception:
+        logger.info(f"采用方式 {SCREENSHOT_WAY} 获取截图")
+    except (OSError, UnidentifiedImageError) as e:
+        logger.warning(f"截图方式 {SCREENSHOT_WAY} 失败，尝试下一种方式: {e}")
         SCREENSHOT_WAY -= 1
         check_screenshot()
 

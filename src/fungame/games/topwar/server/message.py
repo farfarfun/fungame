@@ -2,8 +2,12 @@ import threading
 import time
 
 import websocket
-from fungame.games.topwar.entity import MessageResponse
+from farlog import getLogger
 from funsecret import read_secret
+
+from fungame.games.topwar.entity import MessageResponse
+
+logger = getLogger("fungame")
 
 ping_interval = 30
 
@@ -19,23 +23,21 @@ class TopWarMessage:
                                                    "cross": "102_3_cross_1554_1600"}
 
     def on_message(self, ws, response):
-        """
-        """
         if 'chatpush' in response:
             response = MessageResponse(response[2:])
-            print(response)
+            logger.info(response)
 
     def on_open(self, ws):
-        print('connection established')
+        logger.info("connection established")
 
         count = 420
         for key in list(self.topwar_channels.keys()):
             channel_id = self.topwar_channels[key]
-            print(f'Joined {key.upper()}')
+            logger.info(f"Joined {key.upper()}")
             ws.send(f'{count}["join","{channel_id}"]')
             count += 1
 
-        print(f'Binded UUID: {self.uuid}')
+        logger.info("Binded UUID")
         ws.send(f'{count}["bind","{self.uuid}"]')
 
         def start_heartbeat():
@@ -46,7 +48,7 @@ class TopWarMessage:
         threading.Thread(target=start_heartbeat).start()
 
     def on_close(self, ws):
-        print('disconnected')
+        logger.info("disconnected")
 
     def connect_websocket(self):
         self.ws = websocket.WebSocketApp(self.web_socket,

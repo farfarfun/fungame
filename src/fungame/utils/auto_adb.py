@@ -1,31 +1,24 @@
-# -*- coding: utf-8 -*-
 
-import logging
 import os
 import platform
-import subprocess
 
-from funtool.log import logger
+from farlog import getLogger
+from funshell import run_shell
+
+logger = getLogger("fungame")
 
 
 def check_phone():
     """
     查看连接的手机
     """
-    stdout, stderr = execute_cmd("adb devices")
-
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
-
+    stdout = execute_cmd("adb devices")
     logger.info(stdout)
-    return stdout, stderr
+    return stdout
 
 
 def execute_cmd(cmd):
-    execute = subprocess.Popen(
-        str(cmd), stderr=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-    stdout, stderr = execute.communicate()
-    return stdout, stderr
+    return run_shell(str(cmd), printf=False)
 
 
 def copy_file_to_local(from_path='/sdcard/screenshots.png', to_path="screenshots.png"):
@@ -35,13 +28,11 @@ def copy_file_to_local(from_path='/sdcard/screenshots.png', to_path="screenshots
     :param to_path: 本地文件位置
     :return:
     """
-    cmd = r"adb pull " + from_path + " " + to_path
-    stdout, stderr = execute_cmd(cmd)
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
+    cmd = f"adb pull {from_path} {to_path}"
+    stdout = execute_cmd(cmd)
 
-    logger.info("copy file from " + from_path + " to " + to_path)
-    return stdout, stderr
+    logger.info(f"copy file from {from_path} to {to_path}")
+    return stdout
 
 
 def screenshot_to_phone(file_path='/sdcard/screenshots.png'):
@@ -50,14 +41,11 @@ def screenshot_to_phone(file_path='/sdcard/screenshots.png'):
     :param file_path: 文件保存位置
     :return:
     """
-    cmd = r"adb shell /system/bin/screencap -p " + file_path
-    stdout, stderr = execute_cmd(cmd)
+    cmd = f"adb shell /system/bin/screencap -p {file_path}"
+    stdout = execute_cmd(cmd)
 
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
-
-    logger.info("screenshots and save to phone " + file_path)
-    return stdout, stderr
+    logger.info(f"screenshots and save to phone {file_path}")
+    return stdout
 
 
 def screenshot_to_local(file_path='screenshots.png'):
@@ -71,126 +59,74 @@ def screenshot_to_local(file_path='screenshots.png'):
 
 
 def swipe(x1, y1, x2, y2):
-    cmd = r"adb shell input swipe " + \
-        str(x1) + " " + str(y1) + " " + str(x2) + " " + str(y2)
+    cmd = f"adb shell input swipe {x1} {y1} {x2} {y2}"
+    stdout = execute_cmd(cmd)
 
-    stdout, stderr = execute_cmd(cmd)
-
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
-
-    print(stdout)
-    print(stderr)
-    logging.info("swipe position " + str(x1) + " " +
-                 str(y1) + " " + str(x2) + " " + str(y2))
-    return stdout, stderr
+    logger.info(f"swipe position {x1} {y1} {x2} {y2}")
+    return stdout
 
 
 def click(axis_x, axis_y):
-    cmd = r"adb shell input tap " + str(axis_x) + " " + str(axis_y)
+    cmd = f"adb shell input tap {axis_x} {axis_y}"
+    stdout = execute_cmd(cmd)
 
-    stdout, stderr = execute_cmd(cmd)
-
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
-
-    print(stdout)
-    print(stderr)
-    logging.info("click position " + str(axis_x) + " " + str(axis_y))
-    return stdout, stderr
+    logger.info(f"click position {axis_x} {axis_y}")
+    return stdout
 
 
 def connect_ip(ip, port="5555"):
-    cmd = r"adb connect " + ip + ":" + port
-    stdout, stderr = execute_cmd(cmd)
+    cmd = f"adb connect {ip}:{port}"
+    stdout = execute_cmd(cmd)
 
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
-
-    logging.info("connected to " + ip + ":" + port)
-    return stdout, stderr
+    logger.info(f"connected to {ip}:{port}")
+    return stdout
 
 
 def disconnect_ip(ip, port="5555"):
-    cmd = r"adb disconnect " + ip + ":" + port
-    stdout, stderr = execute_cmd(cmd)
+    cmd = f"adb disconnect {ip}:{port}"
+    stdout = execute_cmd(cmd)
 
-    stdout = stdout.decode("utf-8")
-    stderr = stderr.decode("utf-8")
-
-    logging.info("disconnected to " + ip + ":" + port)
-    return stdout, stderr
+    logger.info(f"disconnected to {ip}:{port}")
+    return stdout
 
 
-class AutoADB():
+class AutoADB:
     def __init__(self):
-        try:
-            adb_path = 'adb'
-            subprocess.Popen([adb_path], stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
-            self.adb_path = adb_path
-        except OSError:
-            if platform.system() == 'Windows':
-                adb_path = os.path.join('Tools', "adb", 'adb.exe')
-                try:
-                    subprocess.Popen(
-                        [adb_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    self.adb_path = adb_path
-                except OSError:
-                    pass
-            else:
-                try:
-                    subprocess.Popen(
-                        [adb_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                except OSError:
-                    pass
-            print('请安装 ADB 及驱动并配置环境变量')
-            print('具体链接: https://github.com/wangshub/wechat_jump_game/wiki')
-            exit(1)
+        adb_path = 'adb'
+        if platform.system() == 'Windows':
+            candidate = os.path.join('Tools', "adb", 'adb.exe')
+            if os.path.exists(candidate):
+                adb_path = candidate
+
+        self.adb_path = adb_path
+        result = run_shell(f"{self.adb_path} version", printf=False)
+        if not result or result.startswith("run shell error"):
+            logger.error('请安装 ADB 及驱动并配置环境变量，参考 https://github.com/wangshub/wechat_jump_game/wiki')
+            raise RuntimeError("未找到可用的 adb 可执行文件")
 
     def get_screen(self):
-        process = os.popen(self.adb_path + ' shell wm size')
-        output = process.read()
-        return output
+        return run_shell(f"{self.adb_path} shell wm size", printf=False)
 
     def run(self, raw_command):
-        command = '{} {}'.format(self.adb_path, raw_command)
-        process = os.popen(command)
-        output = process.read()
-        return output
+        return run_shell(f"{self.adb_path} {raw_command}", printf=False)
 
     def test_device(self):
-        print('检查设备是否连接...')
-        command_list = [self.adb_path, 'devices']
-        process = subprocess.Popen(
-            command_list, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        output = process.communicate()
-        if output[0].decode('utf8') == 'List of devices attached\n\n':
-            print('未找到设备')
-            print('adb 输出:')
-            for each in output:
-                print(each.decode('utf8'))
-            exit(1)
-        print('设备已连接')
-        print('adb 输出:')
-        for each in output:
-            print(each.decode('utf8'))
+        logger.info('检查设备是否连接...')
+        output = run_shell(f"{self.adb_path} devices", printf=False)
+        if output == 'List of devices attached':
+            logger.warning('未找到设备')
+            raise RuntimeError("未找到已连接的 adb 设备")
+        logger.info(f"设备已连接: {output}")
+        return output
 
     def test_density(self):
-        process = os.popen(self.adb_path + ' shell wm density')
-        output = process.read()
-        return output
+        return run_shell(f"{self.adb_path} shell wm density", printf=False)
 
     def test_device_detail(self):
-        process = os.popen(self.adb_path + ' shell getprop ro.product.device')
-        output = process.read()
-        return output
+        return run_shell(f"{self.adb_path} shell getprop ro.product.device", printf=False)
 
     def test_device_os(self):
-        process = os.popen(
-            self.adb_path + ' shell getprop ro.build.version.release')
-        output = process.read()
-        return output
+        return run_shell(f"{self.adb_path} shell getprop ro.build.version.release", printf=False)
 
 
 """
@@ -285,16 +221,10 @@ class AutoADB():
 85 -->  "TAG_LAST_KEYCODE"
 2：adb shell input tap
     这条命令模拟Android手机在屏幕坐标（X,Y）处进行了点击操作。
-3：adb shell input swipe  
+3：adb shell input swipe
     这条命令模拟Android手机从屏幕坐标（X1,Y1）滑动到坐标（X2,Y2）的操作。
 4、uiautomator dump   dump: creates an XML dump of current UI hierarchy 这个命令是用来成成当前界面的UI层次，并用XML格式进行展示 。这样就可以获取各个组件的位置了
 注：如果PC要想同时控制多台Android手机，必须在adb 后面添加-s
 例如：adb -s 13b6e4c4 shell input tap 400 400
 表示对13b6e4c4这台Android手机进行在屏幕上（400,400）坐标位置进行模拟的点击事件。
 """
-# check_phone()
-
-# # screenshot_to_local()
-
-# # click(109, 274)
-# swipe(0, 500, 10, 800)

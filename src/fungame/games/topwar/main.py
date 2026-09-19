@@ -2,9 +2,13 @@ import json
 import time
 from threading import Thread
 
-from fungame.games.topwar.entity import ActionResponse
+from farlog import getLogger
 from funsecret import read_secret
 from websocket import WebSocket, create_connection
+
+from fungame.games.topwar.entity import ActionResponse
+
+logger = getLogger("fungame")
 
 ping_interval = 30
 
@@ -43,8 +47,7 @@ class TopWarAction:
         self.ws_init()
 
     def ws_init(self):
-        print('connection established')
-        print(f'token:{self.token}')
+        logger.info("connection established")
         data = {
             "c": 1,
             "o": "0",
@@ -80,16 +83,17 @@ class TopWarAction:
                 msg = self.ws.recv()
                 try:
                     response = ActionResponse(msg)
-                    print(response)
+                    logger.info(response)
                     if response.cid == 901:
-                        print(response.data)
-                except Exception as e:
-                    print(f'error:{e}\t{msg}')
+                        logger.info(response.data)
+                except (ValueError, KeyError) as e:
+                    # 单条消息解析失败不应中断长期运行的监听线程，记录完整上下文后继续处理下一条
+                    logger.exception(f"解析 topwar 消息失败，已跳过: {e}\t{msg}")
 
         Thread(target=on_message).start()
 
 
-topwar = TopWarAction()
-
-topwar.ws.send(ActionRequest.map_info().__str__())
-print("waiting")
+if __name__ == "__main__":
+    topwar = TopWarAction()
+    topwar.ws.send(ActionRequest.map_info().__str__())
+    logger.info("waiting")

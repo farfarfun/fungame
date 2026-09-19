@@ -1,7 +1,11 @@
 import json
 from datetime import datetime
 
+from farlog import getLogger
+
 from .core import User
+
+logger = getLogger("fungame")
 
 
 class ActionResponse:
@@ -21,7 +25,7 @@ class ActionResponse:
         data = json.loads(data)
 
         if len(set(data.keys()) - set('c,s,d,t,o'.split(','))) > 0:
-            print(data.keys())
+            logger.warning(f"topwar 响应包含未识别字段: {list(data.keys())}")
 
         self.cid = data['c']
         self.data = data['d'] or ''

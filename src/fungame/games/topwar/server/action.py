@@ -1,14 +1,16 @@
 import json
 import time
 from threading import Thread
-from typing import List
 
 import pandas as pd
-from fungame.games.topwar.action import MapInfoAction
-from fungame.games.topwar.entity import (ActionInterface, ActionRequest,
-                                          ActionResponse)
+from farlog import getLogger
 from tqdm import tqdm
-from websocket import WebSocket, create_connection
+from websocket import WebSocket, WebSocketException, create_connection
+
+from fungame.games.topwar.action import MapInfoAction
+from fungame.games.topwar.entity import ActionInterface, ActionRequest, ActionResponse
+
+logger = getLogger("fungame")
 
 ping_interval = 30
 
@@ -17,7 +19,7 @@ class TopWarAction:
     def __init__(self, token=None, version="1.231.2", server_id=1554, web_socket=None):
         self.web_socket = web_socket or f"wss://server-knight-s1200.rivergame.net/s{server_id}"
         self.ws: WebSocket = create_connection(self.web_socket)
-        self.action_list: List[ActionInterface] = []
+        self.action_list: list[ActionInterface] = []
         self.oid = -1
         self.map_info = None
 
@@ -32,7 +34,7 @@ class TopWarAction:
         return str(self.oid)
 
     def run(self):
-        print('connection established')
+        logger.info("connection established")
         self.send_request(self.login_request)
 
         def start_heartbeat():
@@ -49,8 +51,9 @@ class TopWarAction:
                     response = ActionResponse(msg)
                     for action in self.action_list:
                         action.run(response)
-                except Exception as e:
-                    print(f'error:{e}\t{msg}')
+                except (ValueError, KeyError) as e:
+                    # 单条消息解析失败不应中断长期运行的监听线程，记录完整上下文后继续处理下一条
+                    logger.exception(f"处理 topwar 消息失败，已跳过: {e}\t{msg}")
 
         Thread(target=on_message).start()
         time.sleep(5)
@@ -60,8 +63,8 @@ class TopWarAction:
         msg = request.__str__()
         try:
             self.ws.send(msg)
-        except Exception as e:
-            print(f'{e}:{msg}')
+        except WebSocketException as e:
+            raise RuntimeError(f"发送 topwar 请求失败: {msg}") from e
 
     def add_action(self, action: ActionInterface):
         self.action_list.append(action)

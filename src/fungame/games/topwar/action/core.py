@@ -2,12 +2,14 @@
 comment
 """
 import json
-import logging
 from datetime import datetime
 
+from farlog import getLogger
+
 from fungame.games.topwar.core.db import PlayerBaseInfo, ResourceInfo
-from fungame.games.topwar.entity import (ActionInterface, ActionRequest,
-                                          ActionResponse)
+from fungame.games.topwar.entity import ActionInterface, ActionRequest, ActionResponse
+
+logger = getLogger("fungame")
 
 
 class PrintAction(ActionInterface):
@@ -15,7 +17,7 @@ class PrintAction(ActionInterface):
         super(PrintAction, self).__init__()
 
     def run(self, response: ActionResponse):
-        logging.info(response)
+        logger.info(response)
 
 
 class MapInfoAction(ActionInterface):

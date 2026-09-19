@@ -1,10 +1,63 @@
 import json
 import os
+import sqlite3
 from datetime import datetime
 
-from notedrive.tables import SqliteTable
-from fungame.games.topwar.utils import merge_info
 from funsecret import read_secret
+
+from fungame.games.topwar.utils import merge_info
+
+
+class SqliteTable:
+    """基于标准库 sqlite3 的轻量表封装，提供 execute/select/update_or_insert。
+
+    仅覆盖本模块所需的最小能力，避免依赖已废弃的 notedrive。
+    """
+
+    def __init__(self, db_path: str, table_name: str = None):
+        self.db_path = db_path
+        self.table_name = table_name
+        os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
+        self.connection = sqlite3.connect(db_path, check_same_thread=False)
+        self.connection.row_factory = sqlite3.Row
+
+    def execute(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
+        try:
+            cursor = self.connection.execute(sql, params)
+            self.connection.commit()
+            return cursor
+        except sqlite3.Error as e:
+            raise RuntimeError(f"执行 SQL 失败: {sql}") from e
+
+    def select(self, condition: dict = None) -> list[dict]:
+        condition = condition or {}
+        clauses, params = [], []
+        for key, value in condition.items():
+            if value is None:
+                continue
+            clauses.append(f"{key} = ?")
+            params.append(value)
+        where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
+        cursor = self.execute(f"SELECT * FROM {self.table_name}{where}", tuple(params))
+        return [dict(row) for row in cursor.fetchall()]
+
+    def update_or_insert(self, properties: dict, condition: dict):
+        rows = self.select(condition)
+        if rows:
+            set_clause = ", ".join(f"{k} = ?" for k in properties)
+            where_clause = " AND ".join(f"{k} = ?" for k in condition)
+            params = tuple(properties.values()) + tuple(condition.values())
+            self.execute(
+                f"UPDATE {self.table_name} SET {set_clause} WHERE {where_clause}", params
+            )
+        else:
+            merged = {**condition, **properties}
+            columns = ", ".join(merged.keys())
+            placeholders = ", ".join(["?"] * len(merged))
+            self.execute(
+                f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})",
+                tuple(merged.values()),
+            )
 
 
 class BaseInfo(SqliteTable):
@@ -12,7 +65,7 @@ class BaseInfo(SqliteTable):
         if db_path is None:
             db_path = read_secret(cate1="local", cate2="game", cate3="topwar", cate4="db_path")
         if db_path is None:
-            db_path = os.path.abspath(os.path.dirname(__file__)) + '/db/topwar.accdb'
+            db_path = os.path.abspath(os.path.dirname(__file__)) + '/db/topwar.db'
         super(BaseInfo, self).__init__(db_path=db_path, *args, **kwargs)
 
 
