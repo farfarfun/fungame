@@ -32,9 +32,8 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-# src/notegame is the deprecated `notegame` -> `fungame` compat shim, kept for
-# existing `import notegame` users; new code should import `fungame` directly.
-packages = ["src/fungame", "src/notegame"]
+# 兼容层保留在仓库中供迁移参考，但不再随 fungame 发布。
+packages = ["src/fungame"]
 
 [tool.pytest.ini_options]
 # examples/ 下的 nonogram 是未接入本包构建的第三方参考代码（原 pynogram 项目），

@@ -23,7 +23,7 @@
 
 ### 变更
 
+- `notegame` 兼容层不再随 `fungame` 发布；源码仍保留用于迁移旧调用方。
 - 移除 `six` 兼容库：仓库 `requires-python>=3.10`，不再需要 Python 2/3 兼容层，相关 `iteritems`/`itervalues`/`string_types`/`six.moves.*`/`@add_metaclass` 等用法均已改为原生 Python 3 写法。
 - `sudoku/core.py` 公开函数补全类型标注（`sudoku_generate`、`sudoku_check_solution`、`sudoku_solve_solution1/2` 等）。
 - 删除未被引用、依赖已废弃 `noteodps` 的调试脚本 `topwar/test.py`。
-
