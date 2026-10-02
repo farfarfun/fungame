@@ -1,10 +1,14 @@
 import numpy as np
 import pandas as pd
 import xgboost as xgb
+from farlog import getLogger
+from tqdm import tqdm
+
 from fungame.shumo.entity import Anchor, TagInfo, masks
 from fungame.shumo.load_data import load_distince_data
 from fungame.shumo.solution import TagDataList
-from tqdm import tqdm
+
+logger = getLogger("fungame")
 
 global_data = []
 global_label = 1
@@ -152,7 +156,7 @@ class BaseModel:
         self.tag_info.tag_df.loc[self.tag_info.tag_df['tag_id'] == tag_id, 'err'] = e1
         size = self.tag_info.tag_df.loc[self.tag_info.tag_df["tag_id"] == tag_id, "size"].values[0]
 
-        print(f'{tag_id}\t{e1}\t{s1}\t{s2}\t{size}')
+        logger.info(f"tag_id={tag_id} 误差={e1} 预测坐标={s1} 真实坐标={s2} 样本数={size}")
 
     def question2_step1(self):
         def cul_and_save(label='normal'):
@@ -164,7 +168,10 @@ class BaseModel:
             self.question1_train2(train_data, tag_list=tag_list, label=label)
             self.tag_info.tag_df['err2'] = self.tag_info.tag_df['err'] * self.tag_info.tag_df['err']
 
-            print(self.tag_info.tag_df['err'].mean(), np.sqrt(self.tag_info.tag_df['err2'].mean()))
+            logger.info(
+                f"平均误差={self.tag_info.tag_df['err'].mean()} "
+                f"均方根误差={np.sqrt(self.tag_info.tag_df['err2'].mean())}"
+            )
             tmp = pd.DataFrame(self.tag_loc).reset_index()
             tmp.columns = ['id', 'x', 'y', 'z']
             tmp = tmp[(tmp['id'] >= 1) & (tmp['id'] <= 324)]
@@ -185,7 +192,7 @@ class BaseModel:
 
             loc = self.method1_steps([line])
             res.append(loc)
-            print(line, _label, loc)
+            logger.info(f"原始数据={line} 判定标签={_label} 预测坐标={loc}")
         res = pd.DataFrame(res)
         res = np.round(res)
         res.columns = ['x', 'y', 'z']
@@ -247,11 +254,13 @@ class BaseModel:
         t['num'] = 1
         t1 = t.groupby(['true', 'pred'])['num'].count().reset_index()
 
-        print(f'total:{len(df)},positive size:{len(df[df["label"] == 1])}\tnegative size:{len(df[df["label"] == 0])}')
-        print(f'train size:{size}\ttest size:{len(df) - size}')
-        print("混淆矩阵为")
-        print(t1)
-        print(f"准确率为{t1[t1['true'] == t1['pred']]['num'].sum() / t1['num'].sum()}")
+        logger.info(
+            f'total:{len(df)},positive size:{len(df[df["label"] == 1])}\t'
+            f'negative size:{len(df[df["label"] == 0])}'
+        )
+        logger.info(f'train size:{size}\ttest size:{len(df) - size}')
+        logger.info(f"混淆矩阵为:\n{t1}")
+        logger.info(f"准确率为{t1[t1['true'] == t1['pred']]['num'].sum() / t1['num'].sum()}")
 
     def question4_step3(self):
         bst = xgb.Booster(model_file=self.question4_model_path)
@@ -274,7 +283,7 @@ class BaseModel:
         train_cols = [*[f'ds{i}' for i in range(4)], *[f'ps{i}' for i in range(4)], 'x', 'y', 'z', 'mean']
         matrix = xgb.DMatrix(df[train_cols].values)
         pred = bst.predict(matrix)
-        print(pred)
+        logger.info(f"预测结果: {pred}")
 
     def question5_step1(self):
         def train(data):
@@ -286,7 +295,7 @@ class BaseModel:
                     # print(tag_id, _label, value)
                     # value[_label + 1] -= _level
                     pass
-                print(i, _label, value, _level)
+                logger.info(f"index={i} 判定标签={_label} 原始数据={value} 等级={_level}")
                 loc = self.method2_steps([value], near_loc=last_loc)
                 tar = [*value[1:5], 0]
                 weight, vec, ds, d2 = self.method2(loc, tar, near_loc=last_loc)
@@ -306,7 +315,7 @@ class BaseModel:
             pass
         df[['x', 'y', 'z']].to_csv('data/result/question5-track.csv', index=False)
         s = [f'[{line[0]},{line[1]},{line[2]}]' for line in df[['x', 'y', 'z']].values]
-        print(','.join(s))
+        logger.info(','.join(s))
 
     def question1(self):
         TagDataList(self.path_root).run()
@@ -315,13 +324,13 @@ class BaseModel:
         self.question2_step1()
         res = self.predict_data('data/prepare/data2.txt')
         res.to_csv('data/result/question2-predict.csv')
-        print('done')
+        logger.info("done")
 
     def question3(self):
         self.anchor = Anchor.new_instance2()
         res = self.predict_data('data/prepare/data3.txt')
         res.to_csv('data/result/question3-predict.csv')
-        print('done')
+        logger.info("done")
 
     def question4(self):
         # self.question4_step1()

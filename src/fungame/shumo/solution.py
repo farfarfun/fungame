@@ -2,9 +2,13 @@ import json
 
 import numpy as np
 import pandas as pd
+from farlog import getLogger
+from tqdm import tqdm
+
 from fungame.shumo.entity import Anchor, TagInfo
 from fungame.shumo.load_data import load_all_and_merge
-from tqdm import tqdm
+
+logger = getLogger("fungame")
 
 
 class TagDataList:
@@ -13,7 +17,7 @@ class TagDataList:
         self.tag_info = TagInfo(f'{path_root}/Tag坐标信息.txt')
         self.df_normal = load_all_and_merge(f'{path_root}/正常数据')
         self.df_abnormal = load_all_and_merge(f'{path_root}/异常数据')
-        print(len(self.df_normal))
+        logger.info(f"正常数据样本数: {len(self.df_normal)}")
 
     def check(self, df=None, normal=True):
         if df is None:
@@ -48,14 +52,14 @@ class TagDataList:
         df4 = np.linalg.norm(df3, axis=1)
         df4.sort()
 
-        print(df2.head(5))
+        logger.info(f"距离误差样本（前 5 行）:\n{df2.head(5)}")
 
-        print(df4)
+        logger.info(f"距离误差范数排序: {df4}")
 
         df3.resize([1, 4 * len(df1)])
         df3 = df3[0]
         df3.sort()
-        print(df3)
+        logger.info(f"各维度误差排序: {df3}")
 
     def save_train_data(self, df0, normal=True):
         tag = 'normal' if normal else 'abnormal'

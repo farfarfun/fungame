@@ -9,9 +9,15 @@
 - `tests/test_sudoku.py`、`tests/test_nonogram.py`：补充 sudoku/nonogram 公开 API 的正常与边界用例测试。
 - `pyproject.toml` 新增 `shumo` extra（`xgboost`），仅在运行一次性建模脚本时才需要安装。
 - `pyproject.toml` 补全实际使用到的运行时依赖（`farlog`、`funshell`、`pandas`、`pillow`、`tqdm`、`websocket-client`）及版本下限。
+- `tests/test_topwar.py`：补充 `topwar` 请求构造/响应解析的正常路径，以及凭据读取失败、WebSocket 发送失败等边界与失败路径用例。
+- `tests/test_shumo.py`：补充 `shumo.load_data`/`shumo.entity`/`shumo.solution`（不依赖可选的 `xgboost`）的正常与边界用例测试。
 
 ### 修复
 
+- 修复 `pyproject.toml` 中 `funsecret` 版本下限过低（`>=1.4.0`）、未达到组织推荐基线的问题，升级为 `>=1.4.84`。
+- 修复 `shumo/solution.py`、`shumo/model.py` 用 `print()` 输出中间调试信息的问题，统一改用 `farlog` 日志。
+- 修复 `games/nonogram/main.py` 中 `except BaseException: ...; raise` 的过宽异常捕获写法，改为在 `finally` 中用 `sys.exc_info()` 判断异常是否正在传播，无需实际捕获即可完成清理逻辑；同时移除该文件残留的 `print()` 调用，补全类型标注与中文 docstring。
+- 补全 `games/topwar/server/action.py`、`games/topwar/entity/request.py` 公开类与方法的类型标注及中文 docstring，并清理其中已失效的注释代码。
 - 修复 `topwar` 模块中把账号 token / UUID 等凭据通过 `print()` 输出到标准输出的问题，改为不记录敏感值的日志。
 - 修复 `sudoku_generate()` 使用无回溯的贪心随机填数算法、实际上几乎不可能生成一个完整合法数独解（会长时间挂起）的问题，改用标准的分块随机置换算法一次性生成合法解。
 - 修复全仓库 `print()` 充当日志使用、裸 `except Exception`/`except:` 吞异常的问题：统一改用 `farlog` 输出日志，按具体异常类型捕获，并通过 `raise ... from err` 或 `logger.exception()` 保留原始异常上下文。
