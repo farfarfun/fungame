@@ -464,7 +464,7 @@ class Solver(object):
         found_contradictions, best_candidates = self._solve_without_search(
             to_the_max=True)
         current_solution_rate = board.solution_rate
-        logger.warning('Contradictions (found {}): %f',
+        logger.warning('Contradictions (found {}): {}',
                        found_contradictions, current_solution_rate)
 
         if current_solution_rate < 1:

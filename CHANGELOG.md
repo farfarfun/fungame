@@ -26,6 +26,7 @@
 - 修复日志迁移到 `farlog`（底层为 loguru）后，遗留的 `%s`/`%d`/`%r` 风格旧式日志参数不会被正确插值、导致日志消息里出现字面 `%s` 的问题，统一改为 `{}` 风格。
 - 修复 README 中声称 `pyproject.toml` 依赖 `fungame-sudoku>=1.0.2` 但实际并未声明该依赖的不实描述。
 - 修复 `memoized` 第三方库在 Python 3.11+ 上因 `inspect.getargspec` 被移除而导致 `fungame.games.nonogram` 全部无法导入的问题，改用标准库 `functools.lru_cache`。
+- 补漏此前 `%s`→`{}` 迁移遗漏的一处混用写法：`games/nonogram/core/backtracking.py` 的 `logger.warning('Contradictions (found {}): %f', ...)` 第二个占位符仍是 `%f`，同样会被静默丢弃，改为 `{}`。
 
 ### 变更
 
