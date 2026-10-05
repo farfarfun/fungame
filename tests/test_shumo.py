@@ -180,3 +180,52 @@ def test_tag_data_list_run_builds_train_csv_from_fixture_dirs(tmp_path, monkeypa
 
     assert len(tag_list.df_normal) == 2
     assert len(tag_list.df_abnormal) == 2
+
+
+def test_load_all_and_merge_creates_missing_target_directory(tmp_path):
+    """回归用例：target_file 所在目录不存在时应自动创建。
+
+    默认 target_file 是相对路径 `data/<dirname>.csv`，原实现直接 `to_csv`，
+    调用方必须先手工 `mkdir data` 才不会 FileNotFoundError。"""
+    path_dir = tmp_path / "正常数据"
+    path_dir.mkdir()
+    _make_distance_file(tmp_path, name="正常数据/7.txt")
+    target_file = tmp_path / "不存在的目录" / "merged.csv"
+
+    res = load_all_and_merge(str(path_dir), target_file=str(target_file), overwrite=True)
+
+    assert os.path.exists(target_file)
+    assert len(res) == 2
+
+
+def test_check_data_flags_outlier_on_each_distance_field(tmp_path):
+    """回归用例：`check_data` 的逐列检查必须真的按传入的列判断。
+
+    原实现虽然按 `field` 取分位数，后面却一律写死 `dis_0`，等于把 dis_0 查了
+    四遍，dis_1~dis_3 上的离群点永远不会被标成 normal=2。"""
+    import pandas as pd
+
+    content = "h1\nh2\n1: 0 0 130\n"
+    tag_path = tmp_path / "tag.txt"
+    _write(tag_path, content)
+    tag_info = TagInfo(str(tag_path))
+
+    rows = []
+    for i in range(10):
+        # dis_0 全部一致，只在 dis_1 上放一个明显的离群点
+        rows.append(
+            {
+                "normal": 0,
+                "data_index": i,
+                "dis_0": 100.0,
+                "dis_1": 100.0 if i != 5 else 500.0,
+                "dis_2": 100.0,
+                "dis_3": 100.0,
+            }
+        )
+    df = pd.DataFrame(rows)
+
+    res = tag_info.check_data(tag_id=1, df0=df, normal=True)
+
+    assert res.loc[5, "normal"] == 2
+    assert (res.drop(index=5)["normal"] == 0).all()

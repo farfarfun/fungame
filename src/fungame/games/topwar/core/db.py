@@ -66,12 +66,12 @@ class BaseInfo(SqliteTable):
             db_path = read_secret(cate1="local", cate2="game", cate3="topwar", cate4="db_path")
         if db_path is None:
             db_path = os.path.abspath(os.path.dirname(__file__)) + '/db/topwar.db'
-        super(BaseInfo, self).__init__(db_path=db_path, *args, **kwargs)
+        super().__init__(db_path, *args, **kwargs)
 
 
 class PlayerBaseInfo(BaseInfo):
     def __init__(self, table_name='playerBaseInfo', *args, **kwargs):
-        super(PlayerBaseInfo, self).__init__(table_name=table_name, *args, **kwargs)
+        super().__init__(*args, table_name=table_name, **kwargs)
         self.columns = ['pid', 'nick_name', 'user_name', 'national_flag', 'user_gender', 'head_img_url',
                         'avatar_url', 'power', 'player_level', 'shield_time', 'fire_time', 'province',
                         'x', 'y', 'k', 'aid', 'a_tag', 'gmt']
@@ -142,7 +142,7 @@ class ResourceInfo(BaseInfo):
     }
 
     def __init__(self, table_name='resourceBaseInfo', *args, **kwargs):
-        super(ResourceInfo, self).__init__(table_name=table_name, *args, **kwargs)
+        super().__init__(*args, table_name=table_name, **kwargs)
         self.columns = ['id', 'owner_id', 'nick_name', 'user_name',
                         'x', 'y', 'k', 'aid', 'a_tag', 'point_type', 'expire_time', 'item_id', 'item_name', 'gmt']
         self.create()

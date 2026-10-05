@@ -182,6 +182,10 @@ _COLOR_DESCRIPTION_RE = re.compile('([0-9]+)(.+)')
 @expand_generator(type_=tuple)
 def normalize_description_colored(row, color_map):
     """Normalize a colored nonogram description"""
+    # 必须放在函数内部：core.common 在模块级导入本模块的 Color/ColorBlock，
+    # 提到文件顶部会形成循环导入。上游 pynogram 同样是函数内延迟导入，
+    # vendoring 时漏掉了这一行，导致本函数一被调用就抛 NameError。
+    from .common import BlottedBlock, normalize_description
 
     row = normalize_description(row, color=True)
 

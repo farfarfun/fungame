@@ -71,12 +71,14 @@ class TagInfo:
 
     def check_data(self, tag_id, df0, normal=True):
         def check_field(df, field):
+            # 原实现取 df[field] 算分位数，后续却一律写死 'dis_0'，等于把 dis_1..dis_3
+            # 的检查重复做了三遍 dis_0；这里统一改为按传入的 field 判断
             value = df[field].values
             vmin = np.percentile(value, 20)
             vmax = np.percentile(value, 80)
-            df2 = df[(df['dis_0'] >= vmin) & (df['dis_0'] <= vmax)]
-            vmean = np.mean(df2['dis_0'])
-            df.loc[(df['dis_0'] <= vmean - 20) | (df['dis_0'] >= vmean + 20), 'normal'] = 2
+            df2 = df[(df[field] >= vmin) & (df[field] <= vmax)]
+            vmean = np.mean(df2[field])
+            df.loc[(df[field] <= vmean - 20) | (df[field] >= vmean + 20), 'normal'] = 2
 
         def check(df):
             d1 = df[['normal', 'data_index', *[f'dis_{i}' for i in range(4)]]]
@@ -86,7 +88,10 @@ class TagInfo:
                 is_normal = True
                 if line['normal'] > 0:
                     continue
-                # 看某条记录是佛有异常数据
+                # 看某条记录是否有异常数据
+                # 注意：下面的三角不等式判断在当初比赛时被手工关掉了（`is_normal = False`
+                # 与调试 print 都被注释掉），因此 normal=3 这一档实际永远不会被标记。
+                # 这里保持原有行为不变，只是把这个事实写清楚，避免被误读成仍在生效。
                 for i, j in itertools.combinations(np.arange(4), 2):
                     a, b, c = line[f'dis_{i}'], line[f'dis_{j}'], self.anchor.distance[i][j]
 

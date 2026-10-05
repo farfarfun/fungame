@@ -5,7 +5,8 @@ from tqdm import tqdm
 
 
 def load_tag_info(path):
-    tag_info = open(path).read()
+    with open(path, encoding='utf-8') as file:
+        tag_info = file.read()
     tag_info = tag_info.replace('  ', ' ')
     tag_info = tag_info.replace('  ', ' ')
     tag_info = tag_info.replace('  ', ' ')
@@ -25,7 +26,8 @@ def load_tag_info(path):
 
 
 def load_distince_data_origin(path):
-    d1 = open(path).read()
+    with open(path, encoding='utf-8') as file:
+        d1 = file.read()
     d2 = d1.split('\n')
     d3 = pd.DataFrame([line.split(':') for line in d2 if len(line.split(':')) == 9])
     d3.columns = ['c1', 'unixtime', 'c3', 'tag_id', 'anchor_id', 'distance', 'distance_check', 'c8', 'data_index']
@@ -55,7 +57,9 @@ def load_distince_data(path):
 
     d6.reset_index(drop=True, inplace=True)
 
-    assert len(d41) == len(d41) == len(d5) == len(d6)
+    # 原写法是 len(d41) == len(d41)，把 d42 漏写成了 d41，distance_check 透视表
+    # 的行数对不上时这条断言根本不会触发
+    assert len(d41) == len(d42) == len(d5) == len(d6)
 
     return d6
 
@@ -78,5 +82,8 @@ def load_all_and_merge(path_dir, target_file=None, overwrite=False):
         dfs.append(df1)
 
     res = pd.concat(dfs)
-    res.to_csv(target_file, index=None)
+    # 目标目录默认是 data/，不存在时 to_csv 会直接 FileNotFoundError
+    target_dir = os.path.dirname(os.path.abspath(target_file))
+    os.makedirs(target_dir, exist_ok=True)
+    res.to_csv(target_file, index=False)
     return res

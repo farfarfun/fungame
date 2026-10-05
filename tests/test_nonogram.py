@@ -105,3 +105,20 @@ def test_priority_dict_pop_smallest_returns_in_priority_order():
     assert pd.pop_smallest() == ("a", 3)
     with pytest.raises(IndexError):
         pd.pop_smallest()
+
+
+def test_normalize_description_colored_does_not_raise_name_error():
+    """回归用例：`normalize_description_colored` 依赖 `core.common` 里的
+    `normalize_description` 与 `BlottedBlock`，而 `core.common` 又在模块级导入
+    `core.color`，只能在函数内部延迟导入。vendoring 上游 pynogram 时漏掉了这行
+    导入，导致该函数一被调用就抛 NameError。"""
+    from fungame.games.nonogram.core.color import ColorMap, normalize_description_colored
+
+    color_map = ColorMap()
+    black_id = color_map["black"].id_
+
+    assert normalize_description_colored([1, 2], color_map) == (
+        (1, black_id),
+        (2, black_id),
+    )
+    assert normalize_description_colored(["3black"], color_map) == ((3, black_id),)
