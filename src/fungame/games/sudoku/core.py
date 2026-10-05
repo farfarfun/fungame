@@ -8,13 +8,13 @@ from farlog import getLogger
 logger = getLogger("fungame")
 
 
-class Recorder(object):
+class Recorder:
     point = None  # 进行猜测的点
     point_index = 0  # 猜测候选列表使用的值的索引
     value = None  # 回溯记录的值
 
 
-class Sudoku(object):
+class Sudoku:
     def __init__(self, data):
         # 数据初始化(二维的object数组)
         self.value = np.array([[0] * 9] * 9, dtype=object)  # 数独的值，包括未解决和已解决的
@@ -53,8 +53,7 @@ class Sudoku(object):
                     # 判断移除后，是否剩下一个元素
                     if len(item) == 1:
                         self.new_points.put((r, i))  # 添加坐标到“已解决”列表
-                        logger.debug('only one in row: answer={} at {}'.format(
-                            self.value[r, i], (r, i)))
+                        logger.debug(f'only one in row: answer={self.value[r, i]} at {(r, i)}')
                         self.value[r, i] = item[0]
 
         # 列
@@ -66,8 +65,7 @@ class Sudoku(object):
                     # 判断移除后，是否剩下一个元素
                     if len(item) == 1:
                         self.new_points.put((i, c))
-                        logger.debug('only one in col: answer={} at {}'.format(
-                            self.value[i, c], (i, c)))
+                        logger.debug(f'only one in col: answer={self.value[i, c]} at {(i, c)}')
                         self.value[i, c] = item[0]
 
         # 所在九宫格(3x3的数组)
@@ -100,7 +98,7 @@ class Sudoku(object):
                             self.value[r, c] = value
                             self.new_points.put((r, c))
                             logger.debug(
-                                'list val is only one in row: answer={} at {}'.format(self.value[r, c], (r, c)))
+                                f'list val is only one in row: answer={self.value[r, c]} at {(r, c)}')
                             return True
 
         # 同一列只有一个数字的情况
@@ -115,7 +113,7 @@ class Sudoku(object):
                             self.value[r, c] = value
                             self.new_points.put((r, c))
                             logger.debug(
-                                'list val is only one in col: answer={} at {}'.format(self.value[r, c], (r, c)))
+                                f'list val is only one in col: answer={self.value[r, c]} at {(r, c)}')
                             return True
 
         # 九宫格内的单元格只有一个数字的情况
@@ -131,8 +129,7 @@ class Sudoku(object):
                             if sum(map(lambda x: x.count(value), values)) == 1:
                                 self.value[r + m_r, c + m_c] = value
                                 self.new_points.put((r + m_r, c + m_c))
-                                logger.debug('list val is only one in block: answer={} at {}'.format(
-                                    self.value[r + m_r, c + m_c], (r + m_r, c + m_c)))
+                                logger.debug(f'list val is only one in block: answer={self.value[r + m_r, c + m_c]} at {(r + m_r, c + m_c)}')
                                 return True
 
     # 同一个九宫格内数字在同一行或同一列处理(同行列隐性排除)
@@ -169,8 +166,7 @@ class Sudoku(object):
                                         if len(item) == 1:
                                             self.new_points.put((row, col))
                                             logger.debug(
-                                                'block compare row: answer={} at {}'.format(self.value[row, col],
-                                                                                            (row, col)))
+                                                f'block compare row: answer={self.value[row, col]} at {(row, col)}')
                                             self.value[row, col] = item[0]
                                             return True
 
@@ -191,8 +187,7 @@ class Sudoku(object):
                                         if len(item) == 1:
                                             self.new_points.put((row, col))
                                             logger.debug(
-                                                'block compare col: answer={} at {}'.format(self.value[row, col],
-                                                                                            (row, col)))
+                                                f'block compare col: answer={self.value[row, col]} at {(row, col)}')
                                             self.value[row, col] = item[0]
                                             return True
 
@@ -259,7 +254,7 @@ class Sudoku(object):
                 (lists if isinstance(item, list) else nums).append(item)
             if len(set(nums)) != len(nums):
                 # logger.error(f'verify failed. dup in row {r}')
-                logger.debug('verify failed. dup in row {}'.format(r))
+                logger.debug(f'verify failed. dup in row {r}')
                 return False  # 数字要不重复
             if len(list(filter(lambda x: len(x) == 0, lists))):
                 return False  # 候选列表不能为空集
@@ -274,7 +269,7 @@ class Sudoku(object):
             for item in col:
                 (lists if isinstance(item, list) else nums).append(item)
             if len(set(nums)) != len(nums):
-                logger.debug('verify failed. dup in col {}'.format(c))
+                logger.debug(f'verify failed. dup in col {c}')
                 return False  # 数字要不重复
             if len(list(filter(lambda x: len(x) == 0, lists))):
                 return False  # 候选列表不能为空集
@@ -289,7 +284,7 @@ class Sudoku(object):
                 (lists if isinstance(item, list) else nums).append(item)
             if len(set(nums)) != len(nums):
                 logger.debug(
-                    'verify failed. dup in block {}'.format((b_r, b_c)))
+                    f'verify failed. dup in block {(b_r, b_c)}')
                 return False  # 数字要不重复
             if len(list(filter(lambda x: len(x) == 0, lists))):
                 return False  # 候选列表不能为空集
@@ -304,8 +299,7 @@ class Sudoku(object):
         # recorder.value = self.value.copy() #numpy的copy不行
         recorder.value = copy.deepcopy(self.value)
         self.recorder.put(recorder)
-        logger.debug('added to LIFO queue: {}'.format(
-            [x.point for x in self.recorder.queue]))
+        logger.debug(f'added to LIFO queue: {[x.point for x in self.recorder.queue]}')
         self.guess_times += 1  # 记录猜测次数
 
         # 新一轮的排除处理
@@ -314,7 +308,7 @@ class Sudoku(object):
         self.value[point] = item[index]
         self.new_points.put(point)
         logger.debug(
-            'guessing: answer={}/{} @{}'.format(self.value[point], item, point))
+            f'guessing: answer={self.value[point]}/{item} @{point}')
         self.sudo_exclude()
 
     # 回溯，需要先进后出
@@ -333,10 +327,10 @@ class Sudoku(object):
                 if index < len(item):
                     break
                 # if exceed, pop next recorder
-                logger.debug(f'Recall! Try previous point.')
+                logger.debug('Recall! Try previous point.')
 
         logger.debug(
-            'Recall! Try next possible in same point, {} @{}'.format(item[index], point))
+            f'Recall! Try next possible in same point, {item[index]} @{point}')
         self.value = recorder.value
         self.record_guess(point, index)
 
@@ -345,26 +339,26 @@ class Sudoku(object):
         # 第一次解题，排除法
         logger.debug('excluding knowning answers')
         self.sudo_exclude()
-        logger.debug('excluded, current result:\n{}'.format(self.value))
+        logger.debug(f'excluded, current result:\n{self.value}')
 
         # 检查有没错误的，有错误的则回溯；没错误却未解开题目，则再猜测
         while True:
             if self.check_value():
                 fixed_answer = self.get_num_count()
                 logger.debug(
-                    'current no. of fixed answers: {}'.format(fixed_answer))
+                    f'current no. of fixed answers: {fixed_answer}')
                 if fixed_answer == 81:
                     break
                 else:
                     # 获取最佳猜测点
                     point = self.get_best_point()
                     logger.debug(
-                        'Adding new guessing in LIFO, {}'.format(point))
+                        f'Adding new guessing in LIFO, {point}')
 
                     # 记录并处理
                     self.record_guess(point)
                     logger.debug(
-                        'guessed, current result:\n{}'.format(self.value))
+                        f'guessed, current result:\n{self.value}')
             else:
                 # 出错，则回溯，尝试下一个猜测
                 self.recall()

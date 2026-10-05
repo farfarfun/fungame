@@ -214,8 +214,8 @@ class BaseModel:
             return res
 
         tag_list = np.arange(1, 325)
-        train1 = train(pd.read_csv(f'data/train_normal.csv'))
-        train2 = train(pd.read_csv(f'data/train_abnormal.csv'))
+        train1 = train(pd.read_csv('data/train_normal.csv'))
+        train2 = train(pd.read_csv('data/train_abnormal.csv'))
         train1['label'] = 1
         train2['label'] = 0
         train3 = pd.concat([train1, train2])
@@ -309,7 +309,7 @@ class BaseModel:
                            'tar0', 'tar1', 'tar2', 'tar3']
             return res
 
-        df = train(load_distince_data(f'data/prepare/data5.txt')[['tag_id', 'dis_0', 'dis_1', 'dis_2', 'dis_3']].values)
+        df = train(load_distince_data('data/prepare/data5.txt')[['tag_id', 'dis_0', 'dis_1', 'dis_2', 'dis_3']].values)
         for key in ['x', 'y', 'z']:
             # df[key] = df[key].rolling(window=5, min_periods=1).mean()
             pass

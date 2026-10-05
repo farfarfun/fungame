@@ -14,7 +14,7 @@ logger = getLogger("fungame")
 
 class PrintAction(ActionInterface):
     def __init__(self):
-        super(PrintAction, self).__init__()
+        super().__init__()
 
     def run(self, response: ActionResponse):
         logger.info(response)
@@ -24,7 +24,7 @@ class MapInfoAction(ActionInterface):
     def __init__(self):
         self.player_db = PlayerBaseInfo()
         self.resource_db = ResourceInfo()
-        super(MapInfoAction, self).__init__()
+        super().__init__()
 
     @staticmethod
     def request(x=100, y=100, k=1554, width=7, height=16, march_info=True):

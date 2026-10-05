@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from fungame.games.nonogram.core.color import ColorMap, normalize_description_colored
 from fungame.games.nonogram.core.common import BOX, SPACE, UNKNOWN, partial_sums
 from fungame.games.nonogram.reader import parse_line, read_ini
 from fungame.games.nonogram.solver.base import cache_info
@@ -112,8 +113,6 @@ def test_normalize_description_colored_does_not_raise_name_error():
     `normalize_description` 与 `BlottedBlock`，而 `core.common` 又在模块级导入
     `core.color`，只能在函数内部延迟导入。vendoring 上游 pynogram 时漏掉了这行
     导入，导致该函数一被调用就抛 NameError。"""
-    from fungame.games.nonogram.core.color import ColorMap, normalize_description_colored
-
     color_map = ColorMap()
     black_id = color_map["black"].id_
 

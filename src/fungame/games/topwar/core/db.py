@@ -79,8 +79,8 @@ class PlayerBaseInfo(BaseInfo):
 
     def create(self):
         self.execute(f"""
-            create table if not exists {self.table_name} (               
-              pid             VARCHAR(35)    primary key 
+            create table if not exists {self.table_name} (
+              pid             VARCHAR(35)    primary key
               ,nick_name      VARCHAR(100)   DEFAULT ''
               ,user_name      varchar(100)   DEFAULT ''
               ,national_flag  integer        DEFAULT 0
@@ -90,14 +90,14 @@ class PlayerBaseInfo(BaseInfo):
               ,avatar_url     varchar(150)   DEFAULT ''
               ,power          varchar(50)    DEFAULT ''
               ,player_level   integer        DEFAULT 0
-	          ,shield_time    integer        DEFAULT 0
-	          ,fire_time      integer        DEFAULT 0
-	          ,province       integer        DEFAULT 0
-	          ,x              integer        DEFAULT 0
-	          ,y              integer        DEFAULT 0
-	          ,k              integer        DEFAULT 0
-	          ,aid            integer        DEFAULT 0
-	          ,a_tag          varchar(10)    DEFAULT ''
+            ,shield_time    integer        DEFAULT 0
+            ,fire_time      integer        DEFAULT 0
+            ,province       integer        DEFAULT 0
+            ,x              integer        DEFAULT 0
+            ,y              integer        DEFAULT 0
+            ,k              integer        DEFAULT 0
+            ,aid            integer        DEFAULT 0
+            ,a_tag          varchar(10)    DEFAULT ''
               ,gmt            varchar(20)    DEFAULT ''
               );
             """)
@@ -149,20 +149,20 @@ class ResourceInfo(BaseInfo):
 
     def create(self):
         self.execute(f"""
-            create table if not exists {self.table_name} (               
-              id              VARCHAR(35)    primary key 
+            create table if not exists {self.table_name} (
+              id              VARCHAR(35)    primary key
               ,owner_id        VARCHAR(35)    DEFAULT 0
               ,nick_name      VARCHAR(100)   DEFAULT ''
               ,user_name      varchar(100)   DEFAULT ''
-	          ,x              integer        DEFAULT 0
-	          ,y              integer        DEFAULT 0
-	          ,k              integer        DEFAULT 0
-	          ,aid            integer        DEFAULT 0
-	          ,a_tag          varchar(10)    DEFAULT ''
-	          ,point_type     integer        DEFAULT 0
-	          ,expire_time    integer        DEFAULT 0
-	          ,item_id        integer        DEFAULT 0
-	          ,item_name      varchar(10)    DEFAULT ''
+            ,x              integer        DEFAULT 0
+            ,y              integer        DEFAULT 0
+            ,k              integer        DEFAULT 0
+            ,aid            integer        DEFAULT 0
+            ,a_tag          varchar(10)    DEFAULT ''
+            ,point_type     integer        DEFAULT 0
+            ,expire_time    integer        DEFAULT 0
+            ,item_id        integer        DEFAULT 0
+            ,item_name      varchar(10)    DEFAULT ''
               ,gmt            varchar(20)    DEFAULT ''
               );
             """)
