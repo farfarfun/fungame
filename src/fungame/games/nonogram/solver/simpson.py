@@ -1,8 +1,7 @@
-"""
-Simple algorithm to solve nonograms using left and right overlaps
+"""基于「左右极限重叠」的单行数织求解算法。
 
-See details:
-http://www.lancaster.ac.uk/~simpsons/nonogram/ls-fast
+算法来自 http://www.lancaster.ac.uk/~simpsons/nonogram/ls-fast ，
+本文件派生自上游 pynogram（Apache-2.0），见 ../NOTICE。
 """
 
 from farlog import getLogger
@@ -20,16 +19,30 @@ _SYMBOL_MAP = {
 
 
 class FastSolver(BaseLineSolver):
-    """
-    Nonogram line solver that uses left and right overlap algorithm.
-    The algorithm gets most of the solution, but sometimes not complete one.
+    """用左右极限重叠法求解单行数织线索的求解器。
+
+    把所有色块先全部靠左挤、再全部靠右挤，两种极端摆法重合的格子就能确定。
+    速度很快，但不保证把一行完全解出来——多数情况下只能推进一部分，
+    剩下的要靠 :mod:`~fungame.games.nonogram.core.propagation` 反复迭代
+    或回溯求解器补齐。
+
+    对外入口是继承自 :class:`~fungame.games.nonogram.solver.base.BaseLineSolver`
+    的 ``solve(description, line)`` 类方法（带结果缓存）。
     """
 
     @classmethod
     def push_left(cls, line, clue):
-        """
-        Move all the blocks to the left.
-        Raise NonogramError if inconsistency detected.
+        """把所有色块尽可能往左挤，返回每个色块能取到的最左起始位置。
+
+        Args:
+            line: 当前行的格子序列，元素取值为 ``UNKNOWN`` / ``BOX`` / ``SPACE``。
+            clue: 该行的线索，即各个色块的长度序列。
+
+        Returns:
+            长度与 ``clue`` 相同的列表，第 ``i`` 项是第 ``i`` 个色块的最左起始下标。
+
+        Raises:
+            NonogramError: 线索与当前行的已知格子矛盾，这一行无解。
         """
 
         line_size = len(line)
@@ -236,16 +249,36 @@ class FastSolver(BaseLineSolver):
 
     @classmethod
     def push_right(cls, line, clue):
-        """Move all the blocks to the right"""
+        """把所有色块尽可能往右挤，返回每个色块能取到的最右位置。
+
+        实现上是把 ``line`` 与 ``clue`` 同时反转后复用 :meth:`push_left`。
+
+        Args:
+            line: 当前行的格子序列。
+            clue: 该行的线索，即各个色块的长度序列。
+
+        Returns:
+            长度与 ``clue`` 相同的列表，第 ``i`` 项是第 ``i`` 个色块在**反转坐标系**下
+            的最左起始下标；调用方需要用 ``len(line) - pos - size`` 换算回正向下标
+            （:meth:`_solve` 里就是这么做的）。
+
+        Raises:
+            NonogramError: 线索与当前行的已知格子矛盾，这一行无解。
+        """
         clue = clue[::-1]
         line = line[::-1]
 
         return list(reversed(cls.push_left(line, clue)))
 
     def _solve(self):
-        """
-        Solve the given line with given clue (description)
-        using left and right overlap algorithm
+        """用左右极限重叠法求解单行，返回推进后的格子序列。
+
+        Returns:
+            新的格子列表：左右两种极端摆法都落在色块里的格子标成 ``BOX``，
+            都落在空白里的标成 ``SPACE``，其余保持 ``UNKNOWN``。
+
+        Raises:
+            NonogramError: 线索与当前行矛盾（由 :meth:`push_left` 抛出）。
         """
 
         line = self.line

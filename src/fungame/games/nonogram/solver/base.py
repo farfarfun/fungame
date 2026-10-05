@@ -77,7 +77,7 @@ class BaseLineSolver(object, metaclass=LineSolutionsMeta):
 
     @classmethod
     def _error_message(cls, description, line, additional_info=''):
-        """Solve the line (or use cached value)"""
+        """拼装「这一行解不出来」的报错文案（原先误抄了 solve 的 docstring）。"""
         description, line = tuple(description), tuple(line)
         return '{}: Failed to solve line {!r} with clues {!r}{}'.format(
             cls.__name__, line, description, additional_info)

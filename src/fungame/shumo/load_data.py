@@ -1,10 +1,31 @@
+"""UWB 定位数学建模竞赛数据集的读取与整形工具。
+
+数据集由两类文本文件组成：
+
+- `Tag坐标信息.txt`：两行表头 + 每行 ``tag_id: x y z``，坐标单位为厘米；
+- `正常数据/` 与 `异常数据/` 目录下按 ``<tag_id>.txt`` 命名的距离观测文件，
+  每行是 9 个冒号分隔字段的原始上报记录。
+
+本模块属一次性竞赛代码，字段名与清洗规则均依赖该数据集的具体格式。
+"""
+
 import os
 
 import pandas as pd
 from tqdm import tqdm
 
 
-def load_tag_info(path):
+def load_tag_info(path: str) -> pd.DataFrame:
+    """读取标签（Tag）真实坐标文件。
+
+    Args:
+        path: `Tag坐标信息.txt` 的路径。文件前两行是表头，之后每行形如
+            ``1: 100.5 200.5 300.5``；连续空格与行尾空格都会被归一化。
+
+    Returns:
+        含 ``tag_id``（int）与 ``x`` / ``y`` / ``z``（float）四列的 DataFrame。
+        坐标值已统一乘以 10，换算成与距离观测一致的单位。
+    """
     with open(path, encoding='utf-8') as file:
         tag_info = file.read()
     tag_info = tag_info.replace('  ', ' ')
@@ -14,7 +35,7 @@ def load_tag_info(path):
     tag_info = tag_info.replace(' \n', '\n')
     tag_info_list = tag_info.split('\n')
 
-    tmp = [[i for i in line.split(' ')] for line in tag_info_list[2:] if ' ' in line]
+    tmp = [line.split(' ') for line in tag_info_list[2:] if ' ' in line]
 
     tag_df = pd.DataFrame(tmp)
 
@@ -25,7 +46,19 @@ def load_tag_info(path):
     return tag_df
 
 
-def load_distince_data_origin(path):
+def load_distince_data_origin(path: str) -> pd.DataFrame:
+    """读取单个标签的原始距离观测文件（长表，不做透视）。
+
+    Args:
+        path: 距离观测文件路径，文件名形如 ``<tag_id>.txt``。
+
+    Returns:
+        长表 DataFrame，一行是「某次采样对某个锚点」的一条观测，列为
+        ``c1`` / ``unixtime`` / ``c3`` / ``tag_id`` / ``anchor_id`` /
+        ``distance`` / ``distance_check`` / ``c8`` / ``data_index``。
+        字段数不等于 9 的脏行会被直接丢弃；``c1`` / ``c3`` / ``c8`` 是
+        数据集里未使用的原始字段，保持字符串原样。
+    """
     with open(path, encoding='utf-8') as file:
         d1 = file.read()
     d2 = d1.split('\n')
@@ -38,7 +71,20 @@ def load_distince_data_origin(path):
     return d3
 
 
-def load_distince_data(path):
+def load_distince_data(path: str) -> pd.DataFrame:
+    """读取单个标签的距离观测文件，并按锚点透视成宽表。
+
+    Args:
+        path: 距离观测文件路径，文件名形如 ``<tag_id>.txt``。
+
+    Returns:
+        宽表 DataFrame，一行对应一次采样（``data_index``），含四个锚点的
+        实测距离 ``dis_0``~``dis_3`` 与校验距离 ``dis_c_0``~``dis_c_3``。
+
+    Raises:
+        AssertionError: 两张透视表与分组结果的行数不一致，说明原始文件里
+            存在缺失某个锚点的采样。
+    """
     d3 = load_distince_data_origin(path)
 
     d41 = d3[['data_index', 'anchor_id', 'distance']].pivot(index='data_index', columns='anchor_id', values='distance')
@@ -64,7 +110,21 @@ def load_distince_data(path):
     return d6
 
 
-def load_all_and_merge(path_dir, target_file=None, overwrite=False):
+def load_all_and_merge(
+    path_dir: str, target_file: str | None = None, overwrite: bool = False
+) -> pd.DataFrame:
+    """批量读取一个目录下所有标签的距离观测文件并合并，结果带 CSV 缓存。
+
+    Args:
+        path_dir: 存放 ``<tag_id>.txt`` 的目录，例如 `正常数据/` 或 `异常数据/`。
+        target_file: 缓存 CSV 的写出路径。默认是相对路径 ``data/<目录名>.csv``；
+            所在目录不存在时会自动创建。
+        overwrite: 为 ``False`` 且缓存文件已存在时直接读缓存，不再扫描
+            ``path_dir``；为 ``True`` 时强制重新读取并覆盖缓存。
+
+    Returns:
+        所有标签合并后的宽表 DataFrame，额外带一列 ``tag_id``（取自文件名）。
+    """
     target_file = target_file or f'data/{os.path.basename(path_dir)}.csv'
 
     if not overwrite and os.path.exists(target_file):

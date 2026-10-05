@@ -387,6 +387,18 @@ def _generate_full_grid(n: int = 9, base: int = 3) -> np.ndarray:
 
 
 def sudoku_generate(mask_rate: float = 0.5) -> np.ndarray:
+    """生成一道 9x9 数独题目。
+
+    先用分块随机置换算法生成一个完整合法解，再按 ``mask_rate`` 的比例随机挖空。
+
+    Args:
+        mask_rate: 挖空比例，取值 ``[0, 1]``。``0`` 表示不挖空（直接返回完整解），
+            ``1`` 表示全部挖空。注意挖空位置是逐格独立随机的，实际空格数只在
+            期望上等于 ``mask_rate * 81``，并不保证题目有唯一解。
+
+    Returns:
+        形状为 ``(9, 9)`` 的整型数组，``0`` 表示待填的空格。
+    """
     m = _generate_full_grid()
 
     mm = m.copy()
@@ -397,6 +409,16 @@ def sudoku_generate(mask_rate: float = 0.5) -> np.ndarray:
 
 
 def sudoku_check_solution(m: "np.ndarray | list | str") -> bool:
+    """校验一个**完整填满**的数独解是否合法。
+
+    Args:
+        m: 待校验的解。可以是 ``numpy`` 数组、嵌套列表，或一个以逗号分隔的
+            CSV 文件路径（按 ``np.loadtxt`` 读取）。
+
+    Returns:
+        每一行、每一列、每个 3x3 宫都恰好是 ``1..9`` 的排列时返回 ``True``，
+        否则返回 ``False``。含有 ``0``（空格）的题面一定返回 ``False``。
+    """
     if isinstance(m, list):
         m = np.array(m)
     elif isinstance(m, str):
@@ -422,18 +444,49 @@ def sudoku_check_solution(m: "np.ndarray | list | str") -> bool:
 
 
 def sudoku_solve_solution1(array: "np.ndarray | list") -> np.ndarray:
+    """用 :class:`Sudoku` 的回溯求解器求解数独（确定性算法，推荐使用）。
+
+    Args:
+        array: 数独题面，``0`` 表示空格。可以是 ``numpy`` 数组或嵌套列表。
+
+    Returns:
+        形状与输入一致的求解结果数组。
+
+    Raises:
+        IndexError: 题面无解时回溯到头仍填不满，由底层求解器抛出。
+    """
     sudo = Sudoku(array)
     sudo.sudo_solve()
     return sudo.value
 
 
-def sudoku_solve_solution2(array: "np.ndarray | list | str") -> np.ndarray:
+def sudoku_solve_solution2(
+    array: "np.ndarray | list | str", max_attempts: int = 1000
+) -> np.ndarray:
+    """用「最小候选优先 + 随机猜值 + 整盘重来」的随机化算法求解数独。
+
+    每轮从候选值最少的空格开始随机填数，一旦出现无候选值的格子就整盘推倒重来，
+    因此是**随机**算法：同一题面多次调用的中间过程不同，耗时也不固定。
+    难题或无解题面上成功率很低，故用 ``max_attempts`` 兜底，避免无限循环。
+    确定性场景请改用 :func:`sudoku_solve_solution1`。
+
+    Args:
+        array: 数独题面，``0`` 表示空格。可以是 ``numpy`` 数组、嵌套列表，
+            或一个以逗号分隔的 CSV 文件路径。
+        max_attempts: 最多重来多少轮。原实现没有上限，遇到无解题面会永久挂起。
+
+    Returns:
+        填满后的 ``(9, 9)`` 结果数组。
+
+    Raises:
+        ValueError: ``max_attempts`` 轮之内没能填满整盘。
+    """
     if isinstance(array, list):
         array = np.array(array)
     elif isinstance(array, str):
         array = np.loadtxt(array, dtype=np.int_, delimiter=",")
     rg = np.arange(array.shape[0] + 1)
-    while True:
+    for _ in range(max_attempts):
         mt = array.copy()
         while True:
             d = []
@@ -458,12 +511,22 @@ def sudoku_solve_solution2(array: "np.ndarray | list | str") -> np.ndarray:
             if len(d) == 0:
                 break
         if np.all(mt != 0):
-            break
+            return mt
 
-    return mt
+    raise ValueError(f"随机化求解在 {max_attempts} 轮内未能解出该数独，题面可能无解")
 
 
 def sudoku_solve_solution(array: "np.ndarray | list | str", method: int = 1) -> np.ndarray:
+    """按 ``method`` 选择求解算法的统一入口。
+
+    Args:
+        array: 数独题面，``0`` 表示空格。
+        method: ``1`` 走确定性回溯求解（:func:`sudoku_solve_solution1`），
+            其余值走随机化求解（:func:`sudoku_solve_solution2`）。
+
+    Returns:
+        求解结果数组。
+    """
     if method == 1:
         return sudoku_solve_solution1(array)
     else:
