@@ -1,0 +1,14 @@
+本目录内容（文档、示例棋盘、基准数据、测试用例、演示 GIF）全部来自第三方开源项目：
+
+    pynogram —— Nonogram（数织）求解器
+    上游地址：https://github.com/tsionyx/pynogram
+    原始作者：Ivan L (tsionyx) <tsionyx@gmail.com>
+    原始协议：Apache License 2.0（全文见同目录 LICENSE 文件）
+
+Copyright (c) Ivan L (tsionyx)
+
+这些文件仅作为参考资料保留在源码仓库中，不参与 `fungame` 的构建与 PyPI 发布，
+`pyproject.toml` 的 `[tool.pytest.ini_options] testpaths` 也把它们排除在测试收集之外
+（其中的测试仍按上游的 `pynogram.*` 导入路径书写，在本仓库中无法直接运行）。
+
+实际被打包发布的派生代码位于 `src/fungame/games/nonogram/`，变更说明见该目录的 NOTICE。

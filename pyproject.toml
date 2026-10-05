@@ -7,7 +7,14 @@ name = "fungame"
 version = "1.0.9"
 description = "小游戏合集：nonogram（数织）、sudoku（数独）求解与生成、topwar 地图巡查工具等"
 readme = "README.md"
-license = "MIT"
+# 自有代码为 MIT；`src/fungame/games/nonogram/` 派生自 pynogram（Apache-2.0），
+# 其原始 LICENSE / NOTICE 随包一起分发，详见 README「第三方代码与许可证」。
+license = "MIT AND Apache-2.0"
+license-files = [
+    "LICENSE",
+    "src/fungame/games/nonogram/LICENSE",
+    "src/fungame/games/nonogram/NOTICE",
+]
 requires-python = ">=3.10"
 dependencies = [
     "farlog>=1.1.7",
@@ -36,8 +43,9 @@ dev = [
 packages = ["src/fungame"]
 
 [tool.pytest.ini_options]
-# examples/ 下的 nonogram 是未接入本包构建的第三方参考代码（原 pynogram 项目），
-# 限定测试收集范围到 tests/，避免 pytest 误收集它。
+# examples/ 下的 nonogram 是未接入本包构建的第三方参考代码（上游 pynogram 项目，
+# Apache-2.0，见 examples/nonogram/LICENSE），其测试仍按 `pynogram.*` 导入路径书写，
+# 在本仓库中无法直接运行；限定测试收集范围到 tests/，避免 pytest 误收集它。
 testpaths = ["tests"]
 
 [tool.ruff.lint]

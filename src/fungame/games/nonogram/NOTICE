@@ -1,0 +1,41 @@
+fungame.games.nonogram
+======================
+
+本目录下的代码派生自第三方开源项目 pynogram，并非 farfarfun 原创：
+
+    pynogram —— Nonogram（数织）求解器
+    上游地址：https://github.com/tsionyx/pynogram
+    原始作者：Ivan L (tsionyx) <tsionyx@gmail.com>
+    原始协议：Apache License 2.0（全文见同目录 LICENSE 文件）
+
+Copyright (c) Ivan L (tsionyx)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+本仓库对上游代码所做的修改（Apache-2.0 第 4(b) 条要求声明变更）
+--------------------------------------------------------------
+
+- 顶层包名由 `pynogram` 改为 `fungame.games.nonogram`，所有内部导入路径同步调整。
+- 移除 `six` 兼容层，`iteritems` / `itervalues` / `string_types` / `six.moves.*` /
+  `@add_metaclass` 等 Python 2/3 兼容写法改为原生 Python 3 写法。
+- 日志由上游的 `get_named_logger`（stdlib logging）改为组织统一的 `farlog`，
+  `%s` / `%d` / `%r` 风格占位符改为 loguru 的 `{}` 风格。
+- `memoized` 第三方库（依赖已在 Python 3.11 移除的 `inspect.getargspec`）
+  替换为标准库 `functools.lru_cache`。
+- `core/common.py` 中原有的过宽异常捕获改为按具体异常类型捕获。
+- `core/color.py` 的 `normalize_description_colored` 恢复上游的函数内延迟导入
+  （`normalize_description`、`BlottedBlock`），修复 vendoring 时丢失导入导致的 NameError。
+
+上游项目的文档、示例棋盘、基准数据与测试用例保留在仓库的 `examples/nonogram/`
+目录下（同样是 Apache-2.0，见该目录的 LICENSE），不参与本包的构建与发布。

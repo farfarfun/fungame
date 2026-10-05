@@ -42,6 +42,26 @@ solved = FastSolver.solve([3], line)
 print(solved)
 ```
 
+## 第三方代码与许可证
+
+`fungame.games.nonogram`（`src/fungame/games/nonogram/`）**不是**本组织原创代码，
+它派生自第三方开源项目：
+
+| 项目 | 上游地址 | 原始作者 | 原始协议 |
+| --- | --- | --- | --- |
+| pynogram | <https://github.com/tsionyx/pynogram> | Ivan L (tsionyx) | Apache License 2.0 |
+
+- 该子包在本仓库中的使用范围：重命名顶层包、移除 `six` 兼容层、日志改用 `farlog`、
+  用 `functools.lru_cache` 替换已不可用的 `memoized`，并随 `fungame` 一起发布。
+  完整的变更说明见 [`src/fungame/games/nonogram/NOTICE`](src/fungame/games/nonogram/NOTICE)，
+  Apache-2.0 全文见 [`src/fungame/games/nonogram/LICENSE`](src/fungame/games/nonogram/LICENSE)。
+- `examples/nonogram/` 是上游项目的文档、示例棋盘、基准数据与测试用例，同为 Apache-2.0，
+  仅作参考保留在源码仓库，不参与构建与发布（见 [`examples/nonogram/NOTICE`](examples/nonogram/NOTICE)）。
+
+因此 `fungame` 发行包的整体许可证是 `MIT AND Apache-2.0`：本组织自己编写的部分
+（`games/sudoku`、`games/topwar`、`shumo`、`utils` 等）为 MIT，`games/nonogram`
+保持上游的 Apache-2.0。
+
 ## 关于 farfarfun
 
 [farfarfun](https://github.com/farfarfun) 是一个专注于实用工具库的开源组织，
@@ -51,4 +71,5 @@ print(solved)
 - 📦 PyPI：<https://pypi.org/user/niuliangtao/>
 - 📧 联系：farfarfun@qq.com
 
-本项目基于 [MIT](LICENSE) 协议开源。
+本项目自有代码基于 [MIT](LICENSE) 协议开源；`fungame.games.nonogram` 子包沿用上游
+pynogram 的 [Apache License 2.0](src/fungame/games/nonogram/LICENSE)，详见上文「第三方代码与许可证」。
