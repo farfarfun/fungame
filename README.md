@@ -7,7 +7,7 @@
   - `fungame.games.sudoku` —— 数独的生成/求解代码（`Sudoku` 类 + `sudoku_generate` / `sudoku_solve_solution` 等函数）。
   - `fungame.games.topwar` —— 针对手游《Top War》的自动化脚本（实体建模、请求/响应封装、任务/礼包码等），依赖 `funsecret` 中预先配置好的账号凭据。
   - `fungame.shumo` —— 一次数学建模比赛（UWB 定位数据分析）的解题脚本，属于一次性代码，未再维护；相关的 `xgboost` 依赖只在安装 `fungame[shumo]` extra 时才会拉取。
-- 历史 `src/notegame` 兼容层仅保留在源码仓库供迁移参考，不再随 PyPI 的 `fungame` 包发布；新代码请直接 `import fungame`。
+- 历史 `src/notegame` 兼容层仅保留在源码仓库供迁移参考，不再随 PyPI 的 `fungame` 包发布；新代码请直接 `import fungame`（详见下文「从 notegame 迁移」）。
 
 ## 安装
 
@@ -41,6 +41,33 @@ line = [UNKNOWN] * 5
 solved = FastSolver.solve([3], line)
 print(solved)
 ```
+
+## 从 notegame 迁移
+
+本仓库早期叫 `notegame`，后整体改名为 `fungame`。
+
+| | 旧 | 新 |
+| --- | --- | --- |
+| 发行包名 | `notegame` | `fungame` |
+| 安装方式 | `pip install notegame` | `pip install fungame` |
+| 导入前缀 | `import notegame` | `import fungame` |
+
+迁移只需把导入前缀从 `notegame` 换成 `fungame`，模块路径与 API 一一对应：
+
+```python
+# 旧
+from notegame.games.sudoku.core import sudoku_generate
+# 新
+from fungame.games.sudoku.core import sudoku_generate
+```
+
+- **兼容层范围**：`src/notegame/` 下的转发模块会发出 `DeprecationWarning`，
+  但它**只存在于源码仓库**，`pip install fungame` 装不到。
+- **移除版本**：该兼容层将在 **`fungame 2.0.0`** 中删除。
+- **已知缺口**：PyPI 上独立的 `notegame` 发行包停留在 2021 年的 `0.5.18`，
+  不会自动转发到 `fungame`，旧用户必须手工改成 `pip install fungame`。
+  是否再发一个最终版 `notegame` 转发包属于仓库所有者的发布决策，
+  跟踪见 [farfarfun/todo-list](https://github.com/farfarfun/todo-list/issues)。
 
 ## 第三方代码与许可证
 
