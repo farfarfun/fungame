@@ -12,10 +12,11 @@
 ## 安装
 
 ```bash
-pip install fungame
+# 当前仓库的 1.0.9 尚未发布；从源码安装以使用下文示例中的 API：
+pip install .
 
 # 如果需要运行 shumo 下的建模脚本（依赖 xgboost）：
-pip install "fungame[shumo]"
+pip install ".[shumo]"
 ```
 
 ## 快速开始
@@ -85,9 +86,8 @@ from fungame.games.sudoku.core import sudoku_generate
 - `examples/nonogram/` 是上游项目的文档、示例棋盘、基准数据与测试用例，同为 Apache-2.0，
   仅作参考保留在源码仓库，不参与构建与发布（见 [`examples/nonogram/NOTICE`](examples/nonogram/NOTICE)）。
 
-因此 `fungame` 发行包的整体许可证是 `MIT AND Apache-2.0`：本组织自己编写的部分
-（`games/sudoku`、`games/topwar`、`shumo`、`utils` 等）为 MIT，`games/nonogram`
-保持上游的 Apache-2.0。
+本项目以 MIT 协议发布；`games/nonogram` 子包继续保留上游的 Apache-2.0
+许可证、版权声明和 NOTICE。
 
 ## 关于 farfarfun
 
@@ -98,5 +98,4 @@ from fungame.games.sudoku.core import sudoku_generate
 - 📦 PyPI：<https://pypi.org/user/niuliangtao/>
 - 📧 联系：farfarfun@qq.com
 
-本项目自有代码基于 [MIT](LICENSE) 协议开源；`fungame.games.nonogram` 子包沿用上游
-pynogram 的 [Apache License 2.0](src/fungame/games/nonogram/LICENSE)，详见上文「第三方代码与许可证」。
+本项目基于 [MIT](LICENSE) 协议开源。

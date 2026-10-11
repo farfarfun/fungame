@@ -7,9 +7,10 @@ name = "fungame"
 version = "1.0.9"
 description = "小游戏合集：nonogram（数织）、sudoku（数独）求解与生成、topwar 地图巡查工具等"
 readme = "README.md"
+authors = [{ name = "牛哥", email = "farfarfun@qq.com" }]
 # 自有代码为 MIT；`src/fungame/games/nonogram/` 派生自 pynogram（Apache-2.0），
 # 其原始 LICENSE / NOTICE 随包一起分发，详见 README「第三方代码与许可证」。
-license = "MIT AND Apache-2.0"
+license = "MIT"
 license-files = [
     "LICENSE",
     "src/fungame/games/nonogram/LICENSE",
