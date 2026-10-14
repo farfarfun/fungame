@@ -37,6 +37,8 @@ shumo = [
 [dependency-groups]
 dev = [
     "pytest>=7.0",
+    # 数独求解测试给回溯路径设了超时上限：求解器一旦退化成不收敛，应判失败而不是挂住。
+    "pytest-timeout>=2.4.0",
 ]
 
 [tool.hatch.build.targets.wheel]
