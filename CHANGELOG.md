@@ -11,6 +11,15 @@
 
 ### 新增
 
+- `fungame.games.sudoku` 新增公开异常 `SudokuUnsolvableError`，用于表示「题面本身无解」：
+  原先回溯耗尽时抛的是裸 `Exception('Sudo is wrong, no answer!')`，调用方无法区分它和
+  其他运行时错误，只能靠匹配异常字符串。`sudoku_solve_solution2` 在随机求解达到最大轮次
+  仍未解出时，也从 `ValueError` 改为抛这个异常。
+- `tests/test_sudoku.py` 补充 11 个用例（7 个 -> 18 个）：以一张已知解的网格作真值基准校验
+  `sudoku_solve_solution` 两种 method 的结果（原先只校验「解是否合法」，解错成另一个合法解
+  也会通过）、CSV 文件路径入参、长度 81 的一维数组入参、`Sudoku()` 传入无法整理成 9x9 的
+  数据时报错、无解题面抛 `SudokuUnsolvableError`、`mask_rate` 超出 `[0, 1]` 时报错。
+  回溯相关用例带 `pytest.mark.timeout(30)`，求解器退化为不收敛时判失败而不是挂住。
 - `tests/test_sudoku.py`、`tests/test_nonogram.py`：补充 sudoku/nonogram 公开 API 的正常与边界用例测试。
 - `pyproject.toml` 新增 `shumo` extra（`xgboost`），仅在运行一次性建模脚本时才需要安装。
 - `pyproject.toml` 补全实际使用到的运行时依赖（`farlog`、`funshell`、`pandas`、`pillow`、`tqdm`、`websocket-client`）及版本下限。
@@ -49,6 +58,15 @@
 - `notegame` 兼容层不再随 `fungame` 发布；源码仍保留用于迁移旧调用方。
 - 移除 `six` 兼容库：仓库 `requires-python>=3.10`，不再需要 Python 2/3 兼容层，相关 `iteritems`/`itervalues`/`string_types`/`six.moves.*`/`@add_metaclass` 等用法均已改为原生 Python 3 写法。
 - `sudoku/core.py` 公开函数补全类型标注（`sudoku_generate`、`sudoku_check_solution`、`sudoku_solve_solution1/2` 等）与中文 docstring（用途、参数、返回值、异常）。
+- `sudoku/core.py` 的 `Sudoku` 类补全全部方法的类型标注与中文 docstring（`__init__`/`_cut_num`/
+  `_check_one_possible`/`_check_same_num`/`sudo_exclude`/`get_num_count`/`get_best_point`/
+  `check_value`/`record_guess`/`recall`/`sudo_solve`），`Recorder` 也补上类说明。
+  这部分实现来自 `farfarfun/fungame-sudoku`——该仓库是本模块早期拆分出去的独立包，
+  在那边做了格式化、类型标注与异常类型的精修。本次把精修成果并回来，`fungame-sudoku`
+  随之归档，避免两份数独求解器长期并存。
+  **未采用**那边的 `_generate_full_grid`（随机顺序回溯填数）：本仓库现有的分块随机置换
+  算法（见 <https://stackoverflow.com/a/56581709>）一次构造成功、无递归、且支持 `n`/`base`
+  参数化，优于回溯版本，故保留本仓库实现。
 - 删除未被引用、依赖已废弃 `noteodps` 的调试脚本 `topwar/test.py`。
 - `shumo/load_data.py`、`shumo/entity.py` 补齐模块级说明、公开函数/类的类型标注与中文 docstring；删除与 `TagInfo` 完全重复、无任何引用的 `TagInfoBak1`；在 `check_data` 中写明「三角不等式那一档（`normal=3`）当年被手工注释掉、实际从不触发」这一既有事实（行为保持不变）。
 - `games/nonogram/solver/simpson.py` 的 `FastSolver` 及 `push_left` / `push_right` / `_solve` 英文 docstring 改为中文，并注明派生自上游 pynogram；修正 `solver/base.py` 中 `_error_message` 误抄 `solve` 的 docstring。
