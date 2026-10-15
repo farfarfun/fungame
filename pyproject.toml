@@ -16,7 +16,7 @@ license-files = [
     "src/fungame/games/nonogram/LICENSE",
     "src/fungame/games/nonogram/NOTICE",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "farlog>=1.1.7",
     "funsecret>=1.4.84",
