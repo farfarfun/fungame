@@ -7,7 +7,7 @@
   - `fungame.games.sudoku` —— 数独的生成/求解代码（`Sudoku` 类 + `sudoku_generate` / `sudoku_solve_solution` 等函数）。
   - `fungame.games.topwar` —— 针对手游《Top War》的自动化脚本（实体建模、请求/响应封装、任务/礼包码等），依赖 `funsecret` 中预先配置好的账号凭据。
   - `fungame.shumo` —— 一次数学建模比赛（UWB 定位数据分析）的解题脚本，属于一次性代码，未再维护；相关的 `xgboost` 依赖只在安装 `fungame[shumo]` extra 时才会拉取。
-- 历史 `src/notegame` 兼容层仅保留在源码仓库供迁移参考，不再随 PyPI 的 `fungame` 包发布；新代码请直接 `import fungame`（详见下文「从 notegame 迁移」）。
+- `src/notegame/` 是一层把 `notegame` 前缀转发到 `fungame` 的兼容模块，只存在于源码仓库，不随 PyPI 的 `fungame` 包发布；导入路径一律写 `fungame`（详见下文「`notegame` 前缀的兼容层」）。
 
 ## 安装
 
@@ -43,32 +43,24 @@ solved = FastSolver.solve([3], line)
 print(solved)
 ```
 
-## 从 notegame 迁移
+## `notegame` 前缀的兼容层
 
-本仓库早期叫 `notegame`，后整体改名为 `fungame`。
-
-| | 旧 | 新 |
-| --- | --- | --- |
-| 发行包名 | `notegame` | `fungame` |
-| 安装方式 | `pip install notegame` | `pip install fungame` |
-| 导入前缀 | `import notegame` | `import fungame` |
-
-迁移只需把导入前缀从 `notegame` 换成 `fungame`，模块路径与 API 一一对应：
+`src/notegame/` 下的转发模块让 `import notegame` 仍然可用：它发出
+`DeprecationWarning` 后转发到 `fungame`，模块路径与 API 一一对应，把前缀换掉即可。
 
 ```python
-# 旧
-from notegame.games.sudoku.core import sudoku_generate
-# 新
-from fungame.games.sudoku.core import sudoku_generate
+from notegame.games.sudoku.core import sudoku_generate   # 已废弃
+from fungame.games.sudoku.core import sudoku_generate    # 用这个
 ```
 
-- **兼容层范围**：`src/notegame/` 下的转发模块会发出 `DeprecationWarning`，
-  但它**只存在于源码仓库**，`pip install fungame` 装不到。
-- **移除版本**：该兼容层将在 **`fungame 2.0.0`** 中删除。
-- **已知缺口**：PyPI 上独立的 `notegame` 发行包停留在 2021 年的 `0.5.18`，
-  不会自动转发到 `fungame`，旧用户必须手工改成 `pip install fungame`。
-  是否再发一个最终版 `notegame` 转发包属于仓库所有者的发布决策，
-  跟踪见 [farfarfun/todo-list](https://github.com/farfarfun/todo-list/issues)。
+- **不随包发布**：这层转发只存在于源码仓库，`pip install fungame` 装不到它
+  （见 `pyproject.toml` 的 `[tool.hatch.build.targets.wheel]`）。
+- **移除版本**：将在 **`fungame 2.0.0`** 中删除。
+- **PyPI 上的 `notegame` 是另一个发行包**：最新版 `0.5.18`（2021-12-02），
+  只声明 `tqdm` 一个依赖，既不依赖也不转发到 `fungame`，装到的是一套独立的旧代码。
+  要用本仓库的 API 只能装 `fungame`。是否给 `notegame` 补发一个转发版属于仓库
+  所有者的发布决策，跟踪见
+  [farfarfun/todo-list](https://github.com/farfarfun/todo-list/issues)。
 
 ## 第三方代码与许可证
 

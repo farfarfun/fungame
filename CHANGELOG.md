@@ -18,7 +18,8 @@
 - `tests/test_shumo.py`：补充 `shumo.load_data`/`shumo.entity`/`shumo.solution`（不依赖可选的 `xgboost`）的正常与边界用例测试。
 - 补齐第三方代码 `pynogram` 的许可证与来源声明：新增 `src/fungame/games/nonogram/LICENSE`（Apache-2.0 全文）与同目录 `NOTICE`（版权声明 + Apache-2.0 §4(b) 要求的变更说明），`examples/nonogram/` 同样补上 `LICENSE` 与 `NOTICE`；通过 `pyproject.toml` 的 `license-files` 把它们纳入发行包。
 - README 新增「第三方代码与许可证」小节，列出 `fungame.games.nonogram` 的上游地址、原始作者、原始协议与本仓库的使用范围。
-- README 新增「从 notegame 迁移」小节，给出新旧包名对照、导入前缀替换方式、兼容层移除版本与当前已知缺口。
+- README 新增「`notegame` 前缀的兼容层」小节：转发模块的行为与导入前缀替换方式、不随包发布这一事实、移除版本，以及 PyPI 上独立的 `notegame` 发行包（`0.5.18`，2021-12-02，只依赖 `tqdm`，不转发到 `fungame`）的实际状态。
+- `pyproject.toml` 补上缺失的 `[project.urls]`（`Organization` / `Repository` / `Releases`），键名与其他 `fun*` 包一致。此前完全没有声明，已发布的 `1.0.1` 在 PyPI 上的 `project_urls` 为空，项目页一个链接都没有，用户无从确认包的归属——组织里已经出过 5 次「homepage 指向别人的同名包」的事故（见 SPEC §1.4）。
 - `tests/`：补充 3 个本轮缺陷的回归测试（彩色线索归一化不再 `NameError`、`load_all_and_merge` 自动建目录、`check_data` 逐列标注离群点）。
 
 ### 修复
@@ -55,7 +56,7 @@
 
 ### 废弃
 
-- `src/notegame` 兼容层：`import notegame` 已废弃，替代品为 `import fungame`（模块路径一一对应，把前缀换掉即可）。弃用警告、README「从 notegame 迁移」小节与本条目统一声明：**该兼容层将在 `fungame 2.0.0` 中移除**，在此之前保留。
+- `src/notegame` 兼容层：`import notegame` 已废弃，替代品为 `import fungame`（模块路径一一对应，把前缀换掉即可）。弃用警告、README「`notegame` 前缀的兼容层」小节与本条目统一声明：**该兼容层将在 `fungame 2.0.0` 中移除**，在此之前保留。
   - 已知缺口：PyPI 上独立的 `notegame` 发行包停留在 2021 年的 `0.5.18`，不会转发到 `fungame`；是否补发一个最终版 `notegame` 转发包属于发布决策，需仓库所有者确认。
 
 ## [1.0.1] - 2024-10-26

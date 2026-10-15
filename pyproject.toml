@@ -28,6 +28,13 @@ dependencies = [
     "websocket-client>=1.0.0",
 ]
 
+[project.urls]
+# 不声明这几项，PyPI 项目页上就一个链接都没有，用户无从确认这个包的归属——组织里
+# 已经出过「homepage 指向别人的同名包」的事故，键名与其他 fun* 包保持一致。
+Organization = "https://github.com/farfarfun"
+Repository = "https://github.com/farfarfun/fungame"
+Releases = "https://github.com/farfarfun/fungame/releases"
+
 [project.optional-dependencies]
 # shumo 为一次性数学建模竞赛代码（未再维护），仅在需要运行该部分脚本时才需要
 shumo = [
