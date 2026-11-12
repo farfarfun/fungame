@@ -1,10 +1,16 @@
-""" 
-sudoku
-"""
-from .core import Sudoku, sudoku_check_solution, sudoku_generate, sudoku_solve_solution
+"""数独（Sudoku）的生成、求解与校验。"""
+
+from .core import (
+    Sudoku,
+    SudokuUnsolvableError,
+    sudoku_check_solution,
+    sudoku_generate,
+    sudoku_solve_solution,
+)
 
 __all__ = [
     "Sudoku",
+    "SudokuUnsolvableError",
     "sudoku_check_solution",
     "sudoku_generate",
     "sudoku_solve_solution",
