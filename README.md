@@ -12,11 +12,11 @@
 ## 安装
 
 ```bash
-# 当前仓库的 1.0.9 尚未发布；从源码安装以使用下文示例中的 API：
-pip install .
+# 安装已发布的游戏合集：
+pip install fungame
 
 # 如果需要运行 shumo 下的建模脚本（依赖 xgboost）：
-pip install ".[shumo]"
+pip install "fungame[shumo]"
 ```
 
 ## 快速开始

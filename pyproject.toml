@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fungame"
-version = "1.0.9"
+version = "1.1.0"
 description = "小游戏合集：nonogram（数织）、sudoku（数独）求解与生成、topwar 地图巡查工具等"
 readme = "README.md"
 authors = [{ name = "牛哥", email = "farfarfun@qq.com" }]
