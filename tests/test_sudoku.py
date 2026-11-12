@@ -193,3 +193,11 @@ def test_sudoku_solve_solution2_returns_valid_full_grid():
     puzzle[np.random.choice([True, False], size=full.shape, p=[0.3, 0.7])] = 0
     solved = sudoku_solve_solution2(puzzle.tolist())
     assert sudoku_check_solution(solved) is True
+
+
+def test_sudoku_solve_solution2_stops_after_max_attempts():
+    puzzle = np.array(SOLVED_GRID)
+    puzzle[0, 0] = 0
+    puzzle[1, 0] = 5  # The only missing value in row 0 now conflicts with column 0.
+    with pytest.raises(SudokuUnsolvableError):
+        sudoku_solve_solution2(puzzle, max_attempts=1)

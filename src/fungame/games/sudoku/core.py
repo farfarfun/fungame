@@ -466,7 +466,7 @@ def _generate_full_grid(n: int = 9, base: int = 3) -> np.ndarray:
 def sudoku_generate(mask_rate: float = 0.5) -> np.ndarray:
     """随机生成一道数独题目。
 
-    先用随机顺序回溯填出一个完整合法解，再按 `mask_rate` 随机挖空部分格子。
+    先用分块随机置换构造完整合法解，再按 `mask_rate` 随机挖空部分格子。
 
     Args:
         mask_rate: 挖空比例，取值范围 [0, 1]，默认 0.5。
@@ -539,14 +539,20 @@ def sudoku_solve_solution1(array: list | str | np.ndarray) -> np.ndarray:
     return sudo.value
 
 
-def sudoku_solve_solution2(array: list | str | np.ndarray) -> np.ndarray:
+def sudoku_solve_solution2(
+    array: list | str | np.ndarray, max_attempts: int = 1000
+) -> np.ndarray:
     """基于最少候选数优先的随机填数策略求解数独题目（不保证唯一解路径）。
 
     Args:
         array: 9x9 二维数组或长度为 81 的一维数组，也可以是 CSV 文件路径。
+        max_attempts: 随机求解最多重试的次数。
 
     Returns:
         求解后的 9x9 `numpy.ndarray`。
+
+    Raises:
+        SudokuUnsolvableError: 在最大尝试次数内无法求解。
     """
     if isinstance(array, list):
         array = np.array(array)
@@ -555,7 +561,7 @@ def sudoku_solve_solution2(array: list | str | np.ndarray) -> np.ndarray:
     if array.ndim == 1:
         array = array.reshape(9, 9)
     rg = np.arange(array.shape[0] + 1)
-    while True:
+    for _ in range(max_attempts):
         mt = array.copy()
         while True:
             d = []
@@ -587,9 +593,9 @@ def sudoku_solve_solution2(array: list | str | np.ndarray) -> np.ndarray:
             if len(d) == 0:
                 break
         if np.all(mt != 0):
-            break
+            return mt
 
-    return mt
+    raise SudokuUnsolvableError(f"随机化求解在 {max_attempts} 轮内未能解出该数独")
 
 
 def sudoku_solve_solution(
